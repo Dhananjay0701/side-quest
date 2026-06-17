@@ -37,3 +37,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+## remove images from local storage
+/public/images_to_use
+
+## remove csv files
+/*.csv
