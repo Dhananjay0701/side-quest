@@ -1,0 +1,19 @@
+V1
+---
+1.⁠ ⁠Auth- Done 
+2.⁠ ⁠Public/Private Collections - Done
+3.⁠ ⁠Maps View
+4. Cloudflare workers and r2 objects
+4.⁠ ⁠Stats
+5.⁠ ⁠Explore Page(Curated Public Collections)
+
+V1.5
+-----
+1.⁠ ⁠Follow Collections
+2.⁠ ⁠Add Place
+3.⁠ ⁠Logging
+
+V2
+--
+1.⁠ ⁠Nearby
+2.⁠ ⁠Recommendations
