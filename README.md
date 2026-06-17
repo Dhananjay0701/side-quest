@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Random Sidequest
 
 Personal travel memory and discovery app — browse Google Maps saved lists as premium cinematic collections.
@@ -111,3 +112,7 @@ supabase/migrations/
 - **All data visible** to everyone (multi-user filtering comes later)
 - **`search_enriched`** — Gemini runs on first place detail visit; sets category, tags, description
 - **`is_public`** on collections reserved for future public discovery
+=======
+# side-quest
+explore the new world
+>>>>>>> f5e1a1b7eee8eb95bb83db4e4c1aea83fa8c2741
