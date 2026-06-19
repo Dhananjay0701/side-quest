@@ -12,6 +12,7 @@ import { VisibilityToggle } from "@/components/collections/visibility-toggle";
 import { CoverUploadButton } from "@/components/collections/cover-upload-button";
 import { formatPlaceCount } from "@/lib/utils";
 import { getCollectionGradient } from "@/lib/images/collage";
+import { parseApiJson } from "@/lib/api/response";
 import type { PlaceCard } from "@/lib/db/types";
 
 interface CollectionDetailClientProps {
@@ -54,7 +55,7 @@ export function CollectionDetailClient({
     if (selectedTags.length) params.set("tags", selectedTags.join(","));
 
     const res = await fetch(`/api/places?${params}`);
-    const json = await res.json();
+    const json = await parseApiJson<PlaceCard[]>(res);
     setPlaces(json.data ?? []);
     setLoading(false);
   }, [collectionId, query, category, selectedTags]);

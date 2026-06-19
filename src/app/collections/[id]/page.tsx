@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { CollectionDetailClient } from "@/components/collections/collection-detail-client";
 import { getAuthProfile } from "@/lib/auth/session";
+import { resolveAssetUrl } from "@/lib/images/assets";
 import { getCollectionById, getCollectionFilters } from "@/lib/db/queries/collections";
 
 export default async function CollectionPage({ params }: { params: Promise<{ id: string }> }) {
@@ -18,7 +19,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
         name={collection.name}
         description={collection.description}
         placeCount={collection.place_count}
-        coverImageUrl={collection.cover_image_url}
+        coverImageUrl={resolveAssetUrl(collection.cover_image_url)}
         isPublic={collection.is_public}
         isOwner={isOwner}
         initialFilters={filters}

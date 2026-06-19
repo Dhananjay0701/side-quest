@@ -6,6 +6,7 @@ import { TagPill } from "@/components/places/tag-pill";
 import { PlaceEnrichTrigger } from "@/components/places/place-enrich-trigger";
 import { Button } from "@/components/ui/button";
 import { getAuthProfile } from "@/lib/auth/session";
+import { resolveAssetUrl } from "@/lib/images/assets";
 import { getPlaceById, unwrapRelation } from "@/lib/db/queries/collections";
 
 export default async function PlacePage({ params }: { params: Promise<{ id: string }> }) {
@@ -36,6 +37,7 @@ export default async function PlacePage({ params }: { params: Promise<{ id: stri
   );
 
   const summary = description?.long_text ?? description?.short_text;
+  const coverUrl = resolveAssetUrl(place.cover_image_url);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 md:px-8">
@@ -49,10 +51,10 @@ export default async function PlacePage({ params }: { params: Promise<{ id: stri
 
       <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/50 shadow-lg shadow-black/10">
         <div className="flex flex-col sm:flex-row">
-          {place.cover_image_url && (
+          {coverUrl && (
             <div className="relative h-44 w-full shrink-0 sm:h-[11rem] sm:w-40 md:w-48">
               <Image
-                src={place.cover_image_url}
+                src={coverUrl}
                 alt={place.name}
                 fill
                 className="object-cover"
@@ -120,7 +122,7 @@ export default async function PlacePage({ params }: { params: Promise<{ id: stri
         placeId={place.id}
         searchEnriched={place.search_enriched}
         enrichmentStatus={place.enrichment_status}
-        coverImageUrl={place.cover_image_url}
+        coverImageUrl={coverUrl}
       />
     </div>
   );

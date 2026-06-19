@@ -6,7 +6,7 @@ const GRADIENTS = [
 ];
 
 /** Default fallback when no cover image was uploaded at import time */
-export const DEFAULT_COVER_URL: string | null = "/images_to_use/bir.png";
+export const DEFAULT_COVER_URL: string | null = "collections/bir.png";
 
 export function getCollectionGradient(id: string): string {
   const hash = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);

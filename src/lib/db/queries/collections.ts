@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { resolveAssetUrl } from "@/lib/images/assets";
 import type { CollectionCard, PlaceCard } from "@/lib/db/types";
 
 export function unwrapRelation<T>(value: unknown): T | null {
@@ -29,7 +30,7 @@ async function mapCollectionRows(
       name: c.name as string,
       description: c.description as string | null,
       placeCount: c.place_count as number,
-      coverImageUrl: c.cover_image_url as string | null,
+      coverImageUrl: resolveAssetUrl(c.cover_image_url as string | null),
       isPublic: c.is_public as boolean,
       topTags,
       user: {
@@ -217,7 +218,7 @@ function mapPlaceRow(row: Record<string, unknown>): PlaceCard {
     tags,
     address: row.address as string | null,
     rating: row.rating as number | null,
-    coverImageUrl: row.cover_image_url as string | null,
+    coverImageUrl: resolveAssetUrl(row.cover_image_url as string | null),
     shortDescription: shortDesc ?? null,
     googleMapsUrl: row.google_maps_url as string,
     likelyAudience: row.likely_audience as string | null,

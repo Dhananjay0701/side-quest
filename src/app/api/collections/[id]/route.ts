@@ -1,4 +1,5 @@
 import { AuthError, getAuthProfile, requireAuthProfile } from "@/lib/auth/session";
+import { resolveAssetUrl } from "@/lib/images/assets";
 import { getCollectionById, getCollectionFilters, isCollectionOwner } from "@/lib/db/queries/collections";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { apiSuccess, apiError } from "@/lib/api/response";
@@ -16,7 +17,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         name: collection.name,
         description: collection.description,
         placeCount: collection.place_count,
-        coverImageUrl: collection.cover_image_url,
+        coverImageUrl: resolveAssetUrl(collection.cover_image_url),
         isPublic: collection.is_public,
       },
       filters,
@@ -30,7 +31,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   try {
     const profile = await requireAuthProfile();
     const { id } = await params;
-    const body = await req.json();
+    const body = (await req.json()) as {
+      isPublic?: boolean;
+      name?: string;
+      description?: string;
+    };
 
     if (!(await isCollectionOwner(id, profile.id))) {
       return apiError("FORBIDDEN", "Not your collection", 403);

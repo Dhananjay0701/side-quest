@@ -1,4 +1,5 @@
 import { AuthError, requireAuthProfile } from "@/lib/auth/session";
+import { resolveAssetUrl } from "@/lib/images/assets";
 import { isCollectionOwner } from "@/lib/db/queries/collections";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { saveLocalImage } from "@/lib/images/save-local-image";
@@ -23,12 +24,12 @@ export async function POST(
       return apiError("INVALID_FILE", "Image file is required");
     }
 
-    const publicUrl = await saveLocalImage(file, id);
+    const storageKey = await saveLocalImage(file, `cover-${id.slice(0, 8)}`);
 
     const supabase = createAdminClient();
     const { error: dbError } = await supabase
       .from("collections")
-      .update({ cover_image_url: publicUrl, cover_source: "upload" })
+      .update({ cover_image_url: storageKey, cover_source: "upload" })
       .eq("id", id)
       .eq("user_id", profile.id)
       .eq("is_deleted", false);
@@ -37,7 +38,7 @@ export async function POST(
       return apiError("DB_ERROR", dbError.message, 500);
     }
 
-    return apiSuccess({ coverImageUrl: publicUrl });
+    return apiSuccess({ coverImageUrl: resolveAssetUrl(storageKey) });
   } catch (err) {
     if (err instanceof AuthError) {
       return apiError("UNAUTHORIZED", "Sign in required", 401);

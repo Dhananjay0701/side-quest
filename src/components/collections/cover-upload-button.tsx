@@ -1,5 +1,7 @@
 "use client";
 
+import { parseApiJson } from "@/lib/api/response";
+
 import { ImagePlus, Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -27,7 +29,7 @@ export function CoverUploadButton({ collectionId, className }: CoverUploadButton
         method: "POST",
         body: formData,
       });
-      const json = await res.json();
+      const json = await parseApiJson(res);
 
       if (!res.ok) throw new Error(json.error?.message ?? "Upload failed");
 

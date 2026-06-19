@@ -5,6 +5,7 @@ import {
   unwrapProfile,
   unwrapRelation,
 } from "@/lib/db/queries/collections";
+import { resolveAssetUrl } from "@/lib/images/assets";
 import type { CollectionCard, PlaceCard } from "@/lib/db/types";
 
 export async function globalSearch(
@@ -41,7 +42,7 @@ export async function globalSearch(
       name: c.name,
       description: c.description,
       placeCount: c.place_count,
-      coverImageUrl: c.cover_image_url,
+      coverImageUrl: resolveAssetUrl(c.cover_image_url),
       isPublic: c.is_public,
       topTags,
       user: {
@@ -87,7 +88,7 @@ export async function globalSearch(
         .filter((t): t is { slug: string; name: string } => Boolean(t)),
       address: row.address,
       rating: row.rating,
-      coverImageUrl: row.cover_image_url,
+      coverImageUrl: resolveAssetUrl(row.cover_image_url),
       shortDescription: desc?.short_text ?? null,
       googleMapsUrl: row.google_maps_url,
       likelyAudience: row.likely_audience,

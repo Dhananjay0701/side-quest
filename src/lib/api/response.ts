@@ -7,3 +7,12 @@ export function apiSuccess<T>(data: T, status = 200, meta?: Record<string, unkno
 export function apiError(code: string, message: string, status = 400) {
   return NextResponse.json({ error: { code, message } }, { status });
 }
+
+export type ApiJson<T = unknown> = {
+  data?: T;
+  error?: { code?: string; message?: string };
+};
+
+export async function parseApiJson<T = unknown>(res: Response): Promise<ApiJson<T>> {
+  return (await res.json()) as ApiJson<T>;
+}

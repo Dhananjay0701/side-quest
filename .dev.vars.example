@@ -1,0 +1,4 @@
+NEXTJS_ENV=development
+NEXT_PUBLIC_APP_URL=http://localhost:8787
+# Optional: public R2 URL — if unset, /cdn/* serves from ASSETS_BUCKET binding
+# NEXT_PUBLIC_ASSETS_BASE_URL=https://pub-xxxx.r2.dev

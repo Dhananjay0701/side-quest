@@ -1,5 +1,7 @@
 "use client";
 
+import { parseApiJson } from "@/lib/api/response";
+
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, Trash2 } from "lucide-react";
@@ -37,7 +39,7 @@ export function CollectionCardMenu({ collectionId, collectionName }: CollectionC
     setDeleting(true);
     try {
       const res = await fetch(`/api/collections/${collectionId}`, { method: "DELETE" });
-      const json = await res.json();
+      const json = await parseApiJson(res);
       if (!res.ok) throw new Error(json.error?.message ?? "Delete failed");
       setOpen(false);
       router.refresh();

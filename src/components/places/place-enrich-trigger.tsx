@@ -1,5 +1,7 @@
 "use client";
 
+import { parseApiJson } from "@/lib/api/response";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Sparkles } from "lucide-react";
@@ -33,7 +35,7 @@ export function PlaceEnrichTrigger({
       setStatus("enriching");
       try {
         const res = await fetch(`/api/places/${placeId}`, { method: "POST" });
-        const json = await res.json();
+        const json = await parseApiJson(res);
         if (!res.ok) throw new Error(json.error?.message ?? "Enrichment failed");
         if (cancelled) return;
         setStatus("done");

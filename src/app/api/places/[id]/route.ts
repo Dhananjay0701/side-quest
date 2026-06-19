@@ -1,4 +1,5 @@
 import { getAuthProfile } from "@/lib/auth/session";
+import { resolveAssetUrl } from "@/lib/images/assets";
 import { getPlaceById } from "@/lib/db/queries/collections";
 import { runLazyPlaceEnrichment } from "@/lib/enrich/lazy-enrich";
 import { apiSuccess, apiError } from "@/lib/api/response";
@@ -23,7 +24,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       name: place.name,
       address: place.address,
       rating: place.rating,
-      coverImageUrl: place.cover_image_url,
+      coverImageUrl: resolveAssetUrl(place.cover_image_url),
       googleMapsUrl: place.google_maps_url,
       category: category ? { slug: category.slug, name: category.name } : null,
       tags: tagRows.map((t) => t.tags).filter(Boolean),

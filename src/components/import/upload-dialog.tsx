@@ -1,5 +1,7 @@
 "use client";
 
+import { parseApiJson } from "@/lib/api/response";
+
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -73,19 +75,25 @@ export function UploadDialog({ trigger }: UploadDialogProps) {
 
     try {
       const res = await fetch("/api/import", { method: "POST", body: formData });
-      const json = await res.json();
+      const json = await parseApiJson<{ jobId: string }>(res);
 
       if (!res.ok) {
         throw new Error(json.error?.message ?? "Import failed");
       }
 
-      const jobId = json.data.jobId;
+      const jobId = json.data?.jobId;
+      if (!jobId) throw new Error("Import failed");
       setStatus("Importing places...");
 
       const poll = async () => {
         const statusRes = await fetch(`/api/import/${jobId}`);
-        const statusJson = await statusRes.json();
+        const statusJson = await parseApiJson<{
+          status: string;
+          collectionId?: string;
+          errorMessage?: string;
+        }>(statusRes);
         const job = statusJson.data;
+        if (!job) throw new Error("Import status unavailable");
 
         if (job.status === "completed") {
           setStatus("Done! Refreshing...");

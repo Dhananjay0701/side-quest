@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Random Sidequest
 
 Personal travel memory and discovery app — browse Google Maps saved lists as premium cinematic collections.
@@ -6,12 +5,13 @@ Personal travel memory and discovery app — browse Google Maps saved lists as p
 ## Stack
 
 - **Frontend:** Next.js 15, TypeScript, Tailwind CSS, shadcn-style components
-- **Backend:** Next.js API routes
-- **Database:** Supabase Postgres
-- **Enrichment:** Google Gemini `gemini-3.1-flash-lite` (on place detail view)
-- **V0 Auth:** Anonymous session cookie (no login UI)
+- **Hosting:** Cloudflare Workers via `@opennextjs/cloudflare`
+- **Assets:** Cloudflare R2 (`random-sidequest-assets`)
+- **Backend:** Next.js API routes on the edge
+- **Database:** Supabase Postgres + Auth
+- **Enrichment:** Google Gemini + Google Places Photos API
 
-## Quick Start
+## Quick Start (local)
 
 ### 1. Install dependencies
 
@@ -30,15 +30,19 @@ Fill in:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `GEMINI_API_KEY`
+- `GOOGLE_MAPS_API_KEY`
+- `NEXT_PUBLIC_APP_URL` (e.g. `http://localhost:3000`)
 
-### 3. Run Supabase migrations (required — tables are NOT auto-created)
+### 3. Run Supabase migrations
 
-Tables are **not** created automatically when you add env vars. Run the SQL files manually in the [Supabase SQL Editor](https://supabase.com/dashboard/project/_/sql):
+Run SQL files in order in the [Supabase SQL Editor](https://supabase.com/dashboard/project/_/sql):
 
 1. `supabase/migrations/001_initial_schema.sql`
 2. `supabase/migrations/002_search_vector.sql`
+3. `supabase/migrations/003`–`005` (auth, profiles, RLS)
+4. `supabase/migrations/006_r2_image_keys.sql` (after uploading images to R2)
 
-You only need to do this once per project.
+See `supabase/AUTH_SETUP.md` for Google OAuth redirect URLs.
 
 ### 4. Start dev server
 
@@ -48,6 +52,53 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Cloudflare Workers deploy
+
+### R2 buckets
+
+| Bucket | Purpose |
+|--------|---------|
+| `random-sidequest-opennext-cache` | OpenNext incremental cache |
+| `random-sidequest-assets` | App images (`collections/`, `places/`, `avatars/`) |
+
+Upload existing images from `public/images_to_use/` into R2 with folder prefixes. See `supabase/R2_ASSETS.md`.
+
+### Environment variables
+
+**Build time** (embedded in client bundle):
+
+```bash
+NEXT_PUBLIC_APP_URL=https://random-sidequest.<your-subdomain>.workers.dev
+NEXT_PUBLIC_ASSETS_BASE_URL=https://pub-xxxx.r2.dev   # optional; direct R2 CDN
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+**Worker secrets** (set via `wrangler secret put`):
+
+```bash
+SUPABASE_SERVICE_ROLE_KEY
+GEMINI_API_KEY
+GOOGLE_MAPS_API_KEY
+```
+
+Copy `.dev.vars.example` to `.dev.vars` for local `wrangler preview`.
+
+### Commands
+
+```bash
+npm run build      # Next.js build only
+npm run preview    # OpenNext build + local Workers preview (port 8787)
+npm run deploy     # Build + deploy to Cloudflare Workers
+npm run cf-typegen # Regenerate cloudflare-env.d.ts from wrangler.jsonc
+```
+
+### Image URLs in production
+
+- DB stores R2 keys like `collections/cover-abc.jpg`
+- `resolveAssetUrl()` serves via `NEXT_PUBLIC_ASSETS_BASE_URL` or `/cdn/*` Worker route
+- New uploads go straight to R2 via the `ASSETS_BUCKET` binding
+
 ## Import Format (CSV)
 
 Export from Google Maps / Takeout as CSV with columns:
@@ -55,49 +106,19 @@ Export from Google Maps / Takeout as CSV with columns:
 | Title | Note | URL | Tags | Comment |
 |-------|------|-----|------|---------|
 
-Example:
-
-```csv
-Title,Note,URL,Tags,Comment
-Galgibaga Beach,,https://www.google.com/maps/place/...,, 
-Cafe Tathastu Goa,,https://www.google.com/maps/place/...,, 
-```
-
-Upload via **Upload CSV** in the top navigation. Provide a collection name (defaults to filename).
-
-Import pipeline:
-1. Parses CSV → creates collection + places (fast, no AI)
-2. Deduplicates by Google Place ID
-3. **Gemini enrichment runs when you open a place** (category, tags, description)
-4. Search works on place names immediately; tags/descriptions added after enrichment
-
-## Project Structure
-
-```
-src/
-  app/              # Pages + API routes
-  components/       # UI components
-  lib/
-    db/queries/     # Supabase queries
-    import/         # CSV parser + pipeline
-    enrich/         # LLM prompts
-    session/        # Anonymous user cookie
-supabase/migrations/
-```
+Upload via **Upload CSV** in the top navigation (requires sign-in).
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/collections` | All collections |
+| GET | `/api/collections` | Collections (public + yours) |
 | GET | `/api/collections/:id` | Collection + filters |
 | GET | `/api/places` | Filtered places |
-| GET | `/api/places/recent` | Recently added |
 | GET | `/api/places/:id` | Place detail |
 | GET | `/api/search?q=` | Global search |
-| POST | `/api/import` | Upload CSV |
-| GET | `/api/import/:jobId` | Import job status |
-| GET | `/api/me` | Current session user |
+| POST | `/api/import` | Upload CSV (auth) |
+| GET | `/cdn/*` | Stream images from R2 |
 
 ## Design
 
@@ -106,13 +127,3 @@ supabase/migrations/
 - Primary: `#14B8A6` (teal)
 - Secondary: `#F59E0B` (amber)
 
-## V0 Notes
-
-- **Explore tab** renders same as Collections (V1 will differ)
-- **All data visible** to everyone (multi-user filtering comes later)
-- **`search_enriched`** — Gemini runs on first place detail visit; sets category, tags, description
-- **`is_public`** on collections reserved for future public discovery
-=======
-# side-quest
-explore the new world
->>>>>>> f5e1a1b7eee8eb95bb83db4e4c1aea83fa8c2741
