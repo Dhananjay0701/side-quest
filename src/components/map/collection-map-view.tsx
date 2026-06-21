@@ -22,6 +22,16 @@ const CLUSTER_LAYER = "places-clusters";
 const CLUSTER_COUNT_LAYER = "places-cluster-count";
 const UNCLUSTERED_LAYER = "places-unclustered";
 
+function clusterCenterCoords(geometry: {
+  type?: string;
+  coordinates?: number[];
+}): [number, number] | null {
+  if (geometry.type === "Point" && geometry.coordinates?.length === 2) {
+    return [geometry.coordinates[0], geometry.coordinates[1]];
+  }
+  return null;
+}
+
 const MAP_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
@@ -228,7 +238,8 @@ export function CollectionMapView({ places, loading }: CollectionMapViewProps) {
         if (clusterId == null || !features[0]) return;
         try {
           const zoom = await source.getClusterExpansionZoom(clusterId);
-          const coords = (features[0].geometry as { coordinates: [number, number] }).coordinates;
+          const coords = clusterCenterCoords(features[0].geometry);
+          if (!coords) return;
           map.easeTo({ center: coords, zoom });
         } catch {
           /* cluster expansion failed */
@@ -361,8 +372,17 @@ export function CollectionMapView({ places, loading }: CollectionMapViewProps) {
           </div>
         )}
 
-        {/* Top controls */}
-        <div className="absolute left-3 right-3 top-3 z-10 flex flex-col gap-2 sm:left-4 sm:right-auto">
+        {/* Nearby — desktop: top-left · mobile: bottom-left collapsible */}
+        <div className="absolute bottom-14 left-3 z-10 md:hidden">
+          <MapNearbyControls
+            radiusKm={nearbyRadiusKm}
+            onRadiusChange={requestNearbyRadius}
+            locating={locating}
+            locationError={locationError}
+            collapsible
+          />
+        </div>
+        <div className="absolute left-4 top-3 z-10 hidden md:block">
           <MapNearbyControls
             radiusKm={nearbyRadiusKm}
             onRadiusChange={requestNearbyRadius}
@@ -370,7 +390,7 @@ export function CollectionMapView({ places, loading }: CollectionMapViewProps) {
             locationError={locationError}
           />
           {missingCoordsCount > 0 && mappablePlaces.length > 0 && (
-            <p className="rounded-lg bg-black/50 px-2.5 py-1 text-[10px] text-white/70 backdrop-blur-sm">
+            <p className="mt-2 rounded-lg bg-black/50 px-2.5 py-1 text-[10px] text-white/70 backdrop-blur-sm">
               {missingCoordsCount} place{missingCoordsCount !== 1 ? "s" : ""} hidden — no coordinates
             </p>
           )}

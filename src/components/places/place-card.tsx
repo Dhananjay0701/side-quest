@@ -162,14 +162,17 @@ export function PlaceCardPinterest({ place }: { place: PlaceCard }) {
             {place.name}
           </h3>
 
-          {(place.category || place.address) && (
-            <p className="mt-1 line-clamp-1 text-[12px] text-white/70">
-              {place.category?.name ?? place.address}
+          {place.category && (
+            <p className="mt-1 line-clamp-1 text-[12px] text-white/70">{place.category.name}</p>
+          )}
+          {!place.category && place.address && (
+            <p className="mt-1 line-clamp-1 text-[12px] text-white/70 hidden md:block">
+              {place.address}
             </p>
           )}
 
           {place.tags.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
+            <div className="mt-2 hidden flex-wrap gap-1 md:flex">
               {place.tags.slice(0, 3).map((tag) => (
                 <span
                   key={tag.slug}

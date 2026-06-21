@@ -3,15 +3,17 @@
 import { parseApiJson } from "@/lib/api/response";
 
 import { ImagePlus, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface CoverUploadButtonProps {
   collectionId: string;
   className?: string;
+  compact?: boolean;
 }
 
-export function CoverUploadButton({ collectionId, className }: CoverUploadButtonProps) {
+export function CoverUploadButton({ collectionId, className, compact }: CoverUploadButtonProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,14 +60,18 @@ export function CoverUploadButton({ collectionId, className }: CoverUploadButton
       <button
         onClick={() => inputRef.current?.click()}
         disabled={loading}
-        className="flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 text-xs text-white/80 backdrop-blur-sm transition-colors hover:border-white/35 hover:bg-black/55 hover:text-white disabled:opacity-50"
+        aria-label="Set cover image"
+        className={cn(
+          "flex shrink-0 items-center rounded-full border border-white/20 bg-black/40 text-white/80 backdrop-blur-sm transition-colors hover:border-white/35 hover:bg-black/55 hover:text-white disabled:opacity-50",
+          compact ? "p-2" : "gap-1.5 px-3 py-1.5 text-xs"
+        )}
       >
         {loading ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          <Loader2 className={cn("animate-spin", compact ? "h-4 w-4" : "h-3.5 w-3.5")} />
         ) : (
-          <ImagePlus className="h-3.5 w-3.5" />
+          <ImagePlus className={cn(compact ? "h-4 w-4" : "h-3.5 w-3.5")} />
         )}
-        {loading ? "Uploading…" : "Set cover"}
+        {!compact && (loading ? "Uploading…" : "Set cover")}
       </button>
 
       {error && <p className="mt-1 text-[11px] text-red-400">{error}</p>}

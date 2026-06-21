@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
 interface VisibilityToggleProps {
   collectionId: string;
   isPublic: boolean;
+  compact?: boolean;
 }
 
-export function VisibilityToggle({ collectionId, isPublic: initial }: VisibilityToggleProps) {
+export function VisibilityToggle({ collectionId, isPublic: initial, compact }: VisibilityToggleProps) {
   const router = useRouter();
   const [isPublic, setIsPublic] = useState(initial);
   const [loading, setLoading] = useState(false);
@@ -37,21 +38,23 @@ export function VisibilityToggle({ collectionId, isPublic: initial }: Visibility
       type="button"
       onClick={toggle}
       disabled={loading}
+      aria-label={isPublic ? "Public collection" : "Private collection"}
       className={cn(
-        "flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium backdrop-blur-sm transition-colors",
+        "flex shrink-0 items-center rounded-full border backdrop-blur-sm transition-colors",
+        compact ? "gap-0 p-2" : "gap-1.5 px-3 py-1 text-[11px] font-medium",
         isPublic
           ? "border-primary/40 bg-primary/20 text-primary"
           : "border-white/20 bg-black/40 text-white/80"
       )}
     >
       {loading ? (
-        <Loader2 className="h-3 w-3 animate-spin" />
+        <Loader2 className={cn("animate-spin", compact ? "h-4 w-4" : "h-3 w-3")} />
       ) : isPublic ? (
-        <Globe className="h-3 w-3" />
+        <Globe className={cn(compact ? "h-4 w-4" : "h-3 w-3")} />
       ) : (
-        <Lock className="h-3 w-3" />
+        <Lock className={cn(compact ? "h-4 w-4" : "h-3 w-3")} />
       )}
-      {isPublic ? "Public" : "Private"}
+      {!compact && (isPublic ? "Public" : "Private")}
     </button>
   );
 }

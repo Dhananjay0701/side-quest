@@ -131,20 +131,29 @@ export function CollectionDetailClient({
         </div>
 
         <div className="relative flex min-h-[12rem] flex-col md:min-h-[14rem]">
-          <div className="flex items-start justify-between p-[4vw] md:p-5">
-            <span className="inline-block rounded-full bg-black/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
+          {/* Top bar — single row on mobile (count + icon actions) */}
+          <div className="flex items-center justify-between gap-2 p-3 md:p-5">
+            <span className="inline-flex min-w-0 shrink items-center rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm sm:px-3 sm:text-[11px]">
               {formatPlaceCount(placeCount)}
               {!loading && withPhotos > 0 && (
-                <span className="font-normal normal-case text-white/70">
+                <span className="hidden font-normal normal-case text-white/70 sm:inline">
                   {" "}
                   · {withPhotos} with photos
                 </span>
               )}
             </span>
-            <div className="flex items-center gap-2">
-              {isOwner && <VisibilityToggle collectionId={collectionId} isPublic={isPublic} />}
-              {isOwner && <CoverUploadButton collectionId={collectionId} />}
-            </div>
+            {isOwner && (
+              <>
+                <div className="flex shrink-0 items-center gap-1.5 sm:hidden">
+                  <VisibilityToggle collectionId={collectionId} isPublic={isPublic} compact />
+                  <CoverUploadButton collectionId={collectionId} compact />
+                </div>
+                <div className="hidden shrink-0 items-center gap-2 sm:flex">
+                  <VisibilityToggle collectionId={collectionId} isPublic={isPublic} />
+                  <CoverUploadButton collectionId={collectionId} />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="mt-auto p-[4vw] md:p-5">
