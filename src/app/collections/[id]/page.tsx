@@ -12,7 +12,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
     const collection = await getCollectionById(id, profile?.id ?? null);
     const filters = await getCollectionFilters(id);
     const isOwner = profile?.id === collection.user_id;
-
+    //console.log(collection.cover_image_url);
     return (
       <CollectionDetailClient
         collectionId={collection.id}
