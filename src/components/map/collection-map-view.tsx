@@ -13,6 +13,7 @@ import {
   placesToGeoJSON,
 } from "@/lib/map/geo";
 import { pickRandomMapPlace } from "@/lib/map/random-place";
+import { registerMapMarkerImages } from "@/lib/map/marker-images";
 import type { GeoPoint, MapPlace, NearbyRadiusKm } from "@/lib/map/types";
 import type { PlaceCard } from "@/lib/db/types";
 
@@ -20,7 +21,6 @@ const PLACES_SOURCE = "collection-places";
 const CLUSTER_LAYER = "places-clusters";
 const CLUSTER_COUNT_LAYER = "places-cluster-count";
 const UNCLUSTERED_LAYER = "places-unclustered";
-const VISITED_HALO_LAYER = "places-visited-halo";
 
 const MAP_STYLE: maplibregl.StyleSpecification = {
   version: 8,
@@ -148,12 +148,14 @@ export function CollectionMapView({ places, loading }: CollectionMapViewProps) {
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 
     map.on("load", () => {
+      registerMapMarkerImages(map);
+
       map.addSource(PLACES_SOURCE, {
         type: "geojson",
         data: placesToGeoJSON([]),
         cluster: true,
-        clusterMaxZoom: 14,
-        clusterRadius: 50,
+        clusterMaxZoom: 13,
+        clusterRadius: 55,
       });
 
       map.addLayer({
@@ -166,15 +168,17 @@ export function CollectionMapView({ places, loading }: CollectionMapViewProps) {
             "step",
             ["get", "point_count"],
             "#14b8a6",
-            10,
+            8,
             "#0d9488",
-            30,
-            "#0f766e",
+            20,
+            "#f59e0b",
+            40,
+            "#d97706",
           ],
-          "circle-radius": ["step", ["get", "point_count"], 18, 10, 24, 30, 30],
-          "circle-stroke-width": 2,
-          "circle-stroke-color": "#0f172a",
-          "circle-opacity": 0.92,
+          "circle-radius": ["step", ["get", "point_count"], 22, 8, 28, 20, 34, 40, 40],
+          "circle-stroke-width": 3,
+          "circle-stroke-color": "#ffffff",
+          "circle-opacity": 0.95,
         },
       });
 
@@ -186,22 +190,12 @@ export function CollectionMapView({ places, loading }: CollectionMapViewProps) {
         layout: {
           "text-field": "{point_count_abbreviated}",
           "text-font": ["Noto Sans Regular"],
-          "text-size": 12,
+          "text-size": 15,
         },
-        paint: { "text-color": "#0f172a" },
-      });
-
-      map.addLayer({
-        id: VISITED_HALO_LAYER,
-        type: "circle",
-        source: PLACES_SOURCE,
-        filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "visitStatus"], "visited"]],
         paint: {
-          "circle-color": "#14b8a6",
-          "circle-radius": 22,
-          "circle-opacity": 0.35,
-          "circle-stroke-width": 2,
-          "circle-stroke-color": "#14b8a6",
+          "text-color": "#ffffff",
+          "text-halo-color": "rgba(15, 23, 42, 0.5)",
+          "text-halo-width": 1.5,
         },
       });
 
@@ -211,10 +205,19 @@ export function CollectionMapView({ places, loading }: CollectionMapViewProps) {
         source: PLACES_SOURCE,
         filter: ["!", ["has", "point_count"]],
         layout: {
-          "text-field": ["get", "markerLabel"],
-          "text-size": 18,
-          "text-allow-overlap": true,
-          "text-ignore-placement": true,
+          "icon-image": ["get", "markerIcon"],
+          "icon-size": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            10, 1.2,
+            13, 1.8,
+            15, 2,
+            17, 1.75,
+          ],
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
+          "icon-anchor": "bottom",
         },
       });
 

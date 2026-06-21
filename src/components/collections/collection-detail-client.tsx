@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { CollectionFilters } from "@/components/collections/collection-filters";
 import { CollectionViewToggle } from "@/components/collections/collection-view-toggle";
@@ -61,6 +61,7 @@ export function CollectionDetailClient({
   const [category, setCategory] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
+  const mapSectionRef = useRef<HTMLDivElement>(null);
   const gradient = getCollectionGradient(collectionId);
 
   const fetchPlaces = useCallback(async () => {
@@ -85,6 +86,26 @@ export function CollectionDetailClient({
       prev.includes(slug) ? prev.filter((t) => t !== slug) : [...prev, slug]
     );
   }
+
+  function handleViewModeChange(mode: CollectionViewMode) {
+    setViewMode(mode);
+  }
+
+  // Scroll map into center of viewport when switching to map view
+  useEffect(() => {
+    if (viewMode !== "map") return;
+
+    const scrollToMap = () => {
+      mapSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    };
+
+    // Wait for layout + dynamic map chunk
+    const timer = window.setTimeout(scrollToMap, 80);
+    return () => window.clearTimeout(timer);
+  }, [viewMode]);
 
   const withPhotos = places.filter((p) => p.coverImageUrl).length;
 
@@ -141,7 +162,7 @@ export function CollectionDetailClient({
 
       {/* List ↔ Map toggle */}
       <div className="mb-4 flex justify-center md:mb-5">
-        <CollectionViewToggle mode={viewMode} onChange={setViewMode} />
+        <CollectionViewToggle mode={viewMode} onChange={handleViewModeChange} />
       </div>
 
       {/* Shared filters — state preserved across view toggle */}
@@ -156,7 +177,8 @@ export function CollectionDetailClient({
         tags={initialFilters.tags}
       />
 
-      {/* Content */}
+      {/* Content — ref used to scroll map into view */}
+      <div ref={mapSectionRef} className="scroll-mt-6">
       {viewMode === "list" ? (
         loading ? (
           <div className="columns-2 gap-4 md:columns-3 lg:columns-4">
@@ -176,6 +198,7 @@ export function CollectionDetailClient({
       ) : (
         <CollectionMapView places={places} loading={loading} />
       )}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { getCategoryMarkerEmoji, getMarkerLabel } from "@/lib/map/category-markers";
+import { getMarkerIconId } from "@/lib/map/category-markers";
 import type { GeoPoint, MapPlace, NearbyRadiusKm } from "@/lib/map/types";
 
 const EARTH_RADIUS_KM = 6371;
@@ -91,10 +91,10 @@ export function placesToGeoJSON(places: MapPlace[]): PlacesFeatureCollection {
         name: place.name,
         categorySlug: place.category?.slug ?? "other",
         visitStatus: place.visitStatus,
-        markerLabel: getMarkerLabel(place.category?.slug, place.visitStatus),
+        markerIcon: getMarkerIconId(place.category?.slug, place.visitStatus),
       },
     })),
   };
 }
 
-export { getCategoryMarkerEmoji };
+export { getCategoryMarkerEmoji } from "@/lib/map/category-markers";
