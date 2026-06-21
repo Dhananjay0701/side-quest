@@ -82,6 +82,7 @@ export function CollectionDetailClient({
               src={coverImageUrl}
               alt={name}
               fill
+              unoptimized
               className="object-cover"
               sizes="100vw"
               priority

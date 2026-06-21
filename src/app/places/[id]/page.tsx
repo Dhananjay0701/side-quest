@@ -57,6 +57,7 @@ export default async function PlacePage({ params }: { params: Promise<{ id: stri
                 src={coverUrl}
                 alt={place.name}
                 fill
+                unoptimized
                 className="object-cover"
                 sizes="(max-width: 640px) 100vw, 192px"
               />
