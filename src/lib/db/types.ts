@@ -93,6 +93,9 @@ export interface PlaceCard {
   likelyAudience: string | null;
   likelyVibe: string | null;
   collectionName?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  visitStatus?: "saved" | "visited";
 }
 
 export interface ImportJob {

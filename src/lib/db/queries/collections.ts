@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveAssetUrl } from "@/lib/images/assets";
+import { getVisitStatusFromMetadata } from "@/lib/map/visit-status";
 import type { CollectionCard, PlaceCard } from "@/lib/db/types";
 
 export function unwrapRelation<T>(value: unknown): T | null {
@@ -223,6 +224,9 @@ function mapPlaceRow(row: Record<string, unknown>): PlaceCard {
     googleMapsUrl: row.google_maps_url as string,
     likelyAudience: row.likely_audience as string | null,
     likelyVibe: row.likely_vibe as string | null,
+    latitude: row.latitude != null ? Number(row.latitude) : null,
+    longitude: row.longitude != null ? Number(row.longitude) : null,
+    visitStatus: getVisitStatusFromMetadata(row.metadata as Record<string, unknown> | null),
   };
 }
 
@@ -256,6 +260,7 @@ export async function getPlaces(params: {
     .from("places")
     .select(
       `id, name, address, rating, cover_image_url, google_maps_url, likely_audience, likely_vibe,
+       latitude, longitude, metadata,
        categories(slug, name),
        place_descriptions(short_text),
        place_tags(tags(slug, name))`,
@@ -323,6 +328,7 @@ export async function getRecentPlaces(profileId: string, limit = 12): Promise<Pl
     .from("places")
     .select(
       `id, name, address, rating, cover_image_url, google_maps_url, likely_audience, likely_vibe, created_at,
+       latitude, longitude, metadata,
        categories(slug, name),
        place_descriptions(short_text),
        place_tags(tags(slug, name)),

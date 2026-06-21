@@ -62,3 +62,30 @@ body {
 .scrollbar-hide {
   -webkit-overflow-scrolling: touch;
 }
+
+/* MapLibre — match app dark theme */
+.maplibregl-ctrl-group {
+  background: rgb(30 41 59 / 0.95) !important;
+  border: 1px solid rgb(51 65 85 / 0.6) !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgb(0 0 0 / 0.35);
+}
+
+.maplibregl-ctrl-group button {
+  filter: invert(1) opacity(0.75);
+}
+
+.maplibregl-ctrl-group button:hover {
+  filter: invert(1) opacity(1);
+}
+
+.maplibregl-ctrl-attrib {
+  background: rgb(15 23 42 / 0.75) !important;
+  color: rgb(203 213 225 / 0.7) !important;
+  font-size: 10px !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: rgb(20 184 166 / 0.9) !important;
+}

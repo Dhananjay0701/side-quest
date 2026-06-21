@@ -1,19 +1,34 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { ScopedSearch } from "@/components/layout/hero-search";
+import { CollectionFilters } from "@/components/collections/collection-filters";
+import { CollectionViewToggle } from "@/components/collections/collection-view-toggle";
+import { CoverUploadButton } from "@/components/collections/cover-upload-button";
+import { VisibilityToggle } from "@/components/collections/visibility-toggle";
 import {
   PlaceCardPinterest,
   PlaceCardPinterestSkeleton,
 } from "@/components/places/place-card";
-import { TagPill } from "@/components/places/tag-pill";
-import { VisibilityToggle } from "@/components/collections/visibility-toggle";
-import { CoverUploadButton } from "@/components/collections/cover-upload-button";
 import { formatPlaceCount } from "@/lib/utils";
 import { getCollectionGradient } from "@/lib/images/collage";
 import { parseApiJson } from "@/lib/api/response";
+import type { CollectionViewMode } from "@/lib/map/types";
 import type { PlaceCard } from "@/lib/db/types";
+
+const CollectionMapView = dynamic(
+  () =>
+    import("@/components/map/collection-map-view").then((m) => m.CollectionMapView),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[min(70vh,520px)] items-center justify-center rounded-2xl border border-border/40 bg-card/30">
+        <p className="text-sm text-muted">Loading map…</p>
+      </div>
+    ),
+  }
+);
 
 interface CollectionDetailClientProps {
   collectionId: string;
@@ -41,6 +56,7 @@ export function CollectionDetailClient({
 }: CollectionDetailClientProps) {
   const [places, setPlaces] = useState<PlaceCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<CollectionViewMode>("list");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -49,7 +65,7 @@ export function CollectionDetailClient({
 
   const fetchPlaces = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ collectionId });
+    const params = new URLSearchParams({ collectionId, limit: "500" });
     if (query) params.set("q", query);
     if (category) params.set("category", category);
     if (selectedTags.length) params.set("tags", selectedTags.join(","));
@@ -74,7 +90,7 @@ export function CollectionDetailClient({
 
   return (
     <div className="px-[4vw] py-[3vw] md:px-6 md:py-6">
-      {/* Hero — full-bleed cover with overlaid text (matches collection cards) */}
+      {/* Hero */}
       <div className="relative mb-[3vw] min-h-[12rem] overflow-hidden rounded-2xl border border-border/40 md:mb-6 md:min-h-[14rem]">
         <div className="absolute inset-0">
           {coverImageUrl ? (
@@ -123,58 +139,42 @@ export function CollectionDetailClient({
         </div>
       </div>
 
-      {/* Scoped search */}
-      <div className="mb-[3vw] w-full md:mb-4">
-        <ScopedSearch
-          placeholder="Search places in this collection..."
-          onSearch={setQuery}
-        />
+      {/* List ↔ Map toggle */}
+      <div className="mb-4 flex justify-center md:mb-5">
+        <CollectionViewToggle mode={viewMode} onChange={setViewMode} />
       </div>
 
-      {/* Category filter chips */}
-      {initialFilters.categories.length > 0 && (
-        <div className="mb-3 flex flex-wrap gap-2">
-          <TagPill label="All" selected={!category} onClick={() => setCategory(null)} />
-          {initialFilters.categories.map((cat) => (
-            <TagPill
-              key={cat.slug}
-              label={`${cat.name} (${cat.count})`}
-              selected={category === cat.slug}
-              onClick={() => setCategory(category === cat.slug ? null : cat.slug)}
-            />
-          ))}
-        </div>
-      )}
+      {/* Shared filters — state preserved across view toggle */}
+      <CollectionFilters
+        query={query}
+        onQueryChange={setQuery}
+        category={category}
+        onCategoryChange={setCategory}
+        selectedTags={selectedTags}
+        onToggleTag={toggleTag}
+        categories={initialFilters.categories}
+        tags={initialFilters.tags}
+      />
 
-      {/* Tag filters */}
-      {initialFilters.tags.length > 0 && (
-        <div className="mb-5 flex flex-wrap gap-1.5">
-          {initialFilters.tags.map((tag) => (
-            <TagPill
-              key={tag.slug}
-              label={tag.name}
-              selected={selectedTags.includes(tag.slug)}
-              onClick={() => toggleTag(tag.slug)}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Pinterest masonry grid */}
-      {loading ? (
-        <div className="columns-2 gap-4 md:columns-3 lg:columns-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <PlaceCardPinterestSkeleton key={i} />
-          ))}
-        </div>
-      ) : places.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted">No places match your filters.</p>
+      {/* Content */}
+      {viewMode === "list" ? (
+        loading ? (
+          <div className="columns-2 gap-4 md:columns-3 lg:columns-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <PlaceCardPinterestSkeleton key={i} />
+            ))}
+          </div>
+        ) : places.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted">No places match your filters.</p>
+        ) : (
+          <div className="columns-2 gap-4 md:columns-3 lg:columns-4">
+            {places.map((place) => (
+              <PlaceCardPinterest key={place.id} place={place} />
+            ))}
+          </div>
+        )
       ) : (
-        <div className="columns-2 gap-4 md:columns-3 lg:columns-4">
-          {places.map((place) => (
-            <PlaceCardPinterest key={place.id} place={place} />
-          ))}
-        </div>
+        <CollectionMapView places={places} loading={loading} />
       )}
     </div>
   );
