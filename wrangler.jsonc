@@ -1,7 +1,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
   
-	"name": "random-sidequest",
+	"name": "side-quest",
   
 	"main": ".open-next/worker.js",
   
@@ -20,7 +20,7 @@
 	"services": [
 	  {
 		"binding": "WORKER_SELF_REFERENCE",
-		"service": "random-sidequest"
+		"service": "side-quest"
 	  }
 	],
   
