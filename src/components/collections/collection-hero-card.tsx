@@ -37,6 +37,7 @@ export function CollectionHeroCard({ collection, className }: CollectionHeroCard
               src={collection.coverImageUrl}
               alt={collection.name}
               fill
+              unoptimized
               className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
               sizes="(max-width: 767px) 85vw, (max-width: 1023px) 22vw, 16vw"
               priority
