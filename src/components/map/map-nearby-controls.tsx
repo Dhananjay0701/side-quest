@@ -86,7 +86,7 @@ export function MapNearbyControls({
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            className="flex items-center gap-1.5 rounded-full border border-border/50 bg-card/95 px-3 py-2 text-[11px] font-medium text-foreground shadow-lg backdrop-blur-md"
+            className="flex min-h-11 items-center gap-1.5 rounded-full border border-border/50 bg-card/95 px-3 py-2.5 text-[11px] font-medium text-foreground shadow-lg backdrop-blur-md"
           >
             <Navigation className="h-3.5 w-3.5 text-primary" />
             Nearby
@@ -103,7 +103,7 @@ export function MapNearbyControls({
               type="button"
               onClick={() => setExpanded(false)}
               aria-label="Collapse nearby options"
-              className="sticky left-0 shrink-0 rounded-full bg-card/95 p-1.5 text-muted transition-colors hover:text-foreground"
+              className="sticky left-0 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-card/95 text-muted transition-colors hover:text-foreground"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </button>

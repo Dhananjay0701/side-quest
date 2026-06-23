@@ -1,0 +1,88 @@
+# Random SideQuest Cursor Rules
+
+## Stack
+
+* Use Next.js App Router.
+* Use TypeScript strict mode.
+* Use Tailwind CSS only.
+* Use Shadcn UI components when applicable.
+* Use Supabase for authentication and database access.
+* Use Cloudflare Workers and R2 compatible patterns.
+
+## Components
+
+* Use Server Components by default.
+* Add 'use client' only when browser APIs, event handlers, or local state are required.
+* Use TypeScript interfaces for all component props.
+* Use functional components only.
+* Use PascalCase component names.
+* Use camelCase for variables, functions, props, and hooks.
+
+## Styling
+
+* Use Tailwind CSS only.
+* Do not create CSS files unless explicitly requested.
+* Build mobile-first.
+* Every new UI must support:
+
+  * Mobile
+  * Tablet
+  * Desktop
+* Every responsive component must include mobile and desktop layouts.
+* Use Tailwind responsive breakpoints:
+
+  * default (mobile)
+  * md
+  * lg
+  * xl
+
+## PWA
+
+* All new UI must work in installed PWA mode.
+* Respect iOS safe-area insets.
+* Avoid layouts that depend on browser navigation bars.
+* Test for touch interactions.
+* Do not rely on hover-only interactions.
+
+## Security
+
+* Never expose secrets in client components.
+* Never expose service role keys.
+* Use NEXT_PUBLIC_* variables only in client code.
+* Validate all user input using Zod.
+* Sanitize rendered HTML.
+* Assume all user input is untrusted.
+
+## Data Fetching
+
+* Fetch data on the server whenever possible.
+* Avoid duplicate queries.
+* Reuse existing queries before creating new ones.
+* Cache when practical.
+
+## Performance
+
+* Always render external compnents like images or data in the way that is fastest low latency for the user
+* Lazy load non-critical content.
+* Avoid unnecessary client components.
+* Optimize for mobile devices first.
+
+## Code Generation
+
+Before writing code:
+
+1. Explain the implementation plan.
+2. List files to be modified.
+3. Consider security implications.
+4. Consider mobile and PWA behavior.
+
+When modifying existing code:
+
+* Follow existing project patterns.
+* Do not introduce new architectural patterns without justification.
+* Reuse existing utilities, hooks, and components.
+* Keep implementations simple.
+Every new UI component must be tested for:
+- Mobile browser
+- Installed PWA mode
+- iOS safe areas

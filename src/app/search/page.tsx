@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CollectionHeroCard } from "@/components/collections/collection-hero-card";
 import { PlaceCardMd } from "@/components/places/place-card";
+import { getAuthProfile } from "@/lib/auth/session";
 import { globalSearch } from "@/lib/db/queries/search";
 
 export default async function SearchPage({
@@ -20,7 +21,8 @@ export default async function SearchPage({
 
   let results: Awaited<ReturnType<typeof globalSearch>> = { collections: [], places: [] };
   try {
-    results = await globalSearch(q);
+    const profile = await getAuthProfile();
+    results = await globalSearch(q, profile?.id ?? null);
   } catch {
     return <p className="text-muted">Search unavailable. Check Supabase configuration.</p>;
   }

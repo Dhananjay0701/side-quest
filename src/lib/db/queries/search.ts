@@ -17,20 +17,12 @@ export async function globalSearch(
   const trimmed = q.trim();
   if (!trimmed) return { collections: [], places: [] };
 
-  let collectionsQuery = supabase
+  const { data: collections } = await supabase
     .from("collections")
     .select("id, name, description, place_count, cover_image_url, is_public, user_id, profiles(display_name, avatar_url, username)")
     .eq("is_deleted", false)
     .or(`name.ilike.%${trimmed}%,description.ilike.%${trimmed}%`)
-    .limit(8);
-
-  if (viewerProfileId) {
-    collectionsQuery = collectionsQuery.or(`is_public.eq.true,user_id.eq.${viewerProfileId}`);
-  } else {
-    collectionsQuery = collectionsQuery.eq("is_public", true);
-  }
-
-  const { data: collections } = await collectionsQuery;
+    .limit(24);
 
   const collectionResults: CollectionCard[] = [];
   for (const c of collections ?? []) {
@@ -51,6 +43,7 @@ export async function globalSearch(
         username: owner?.username,
       },
     });
+    if (collectionResults.length >= 8) break;
   }
 
   const { data: places } = await supabase

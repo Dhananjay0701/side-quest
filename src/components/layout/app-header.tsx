@@ -61,7 +61,7 @@ export function AppHeader({ profile }: AppHeaderProps) {
   );
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/30 bg-[#0B1221]/95 backdrop-blur-xl">
+    <header className="pwa-safe-top sticky top-0 z-50 border-b border-border/30 bg-[#0B1221]/95 backdrop-blur-xl">
       <div className="lg:hidden">
         <div className="flex h-12 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">

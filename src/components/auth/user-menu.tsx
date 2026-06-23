@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { LogOut, Upload, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UploadDialog } from "@/components/import/upload-dialog";
+import { InstallAppMenuItem } from "@/components/pwa/install-app-menu-item";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import type { Profile } from "@/lib/db/types";
 
@@ -32,7 +33,7 @@ export function UserMenu({ profile, initials }: UserMenuProps) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="rounded-full outline-none ring-primary/40 focus-visible:ring-2"
+        className="flex h-11 w-11 items-center justify-center rounded-full outline-none ring-primary/40 focus-visible:ring-2"
         aria-label="Account menu"
       >
         <Avatar className="h-8 w-8">
@@ -53,7 +54,7 @@ export function UserMenu({ profile, initials }: UserMenuProps) {
               <Link
                 href="/"
                 onClick={() => setOpen(false)}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted hover:bg-card/80 hover:text-foreground"
+                className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-muted hover:bg-card/80 hover:text-foreground"
               >
                 <User className="h-4 w-4" />
                 My collections
@@ -63,18 +64,19 @@ export function UserMenu({ profile, initials }: UserMenuProps) {
                   <button
                     type="button"
                     onClick={() => setOpen(false)}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted hover:bg-card/80 hover:text-foreground"
+                    className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-muted hover:bg-card/80 hover:text-foreground"
                   >
                     <Upload className="h-4 w-4" />
                     Upload CSV
                   </button>
                 }
               />
+              <InstallAppMenuItem onSelect={() => setOpen(false)} />
               <button
                 type="button"
                 disabled={signingOut}
                 onClick={handleSignOut}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
+                className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10"
               >
                 <LogOut className="h-4 w-4" />
                 {signingOut ? "Signing out…" : "Sign out"}

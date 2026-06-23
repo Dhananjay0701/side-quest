@@ -373,7 +373,7 @@ export function CollectionMapView({ places, loading }: CollectionMapViewProps) {
         )}
 
         {/* Nearby — desktop: top-left · mobile: bottom-left collapsible */}
-        <div className="absolute bottom-14 left-3 z-10 md:hidden">
+        <div className="absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-3 z-10 md:hidden">
           <MapNearbyControls
             radiusKm={nearbyRadiusKm}
             onRadiusChange={requestNearbyRadius}
@@ -397,14 +397,14 @@ export function CollectionMapView({ places, loading }: CollectionMapViewProps) {
         </div>
 
         {/* Marker legend */}
-        <div className="absolute bottom-3 left-3 z-10 hidden rounded-lg border border-border/40 bg-card/90 px-2.5 py-1.5 text-[10px] text-muted backdrop-blur-md sm:block">
+        <div className="pwa-inset-bottom absolute left-3 z-10 hidden rounded-lg border border-border/40 bg-card/90 px-2.5 py-1.5 text-[10px] text-muted backdrop-blur-md sm:block">
           <span className="text-foreground">○ Saved</span>
           <span className="mx-1.5">·</span>
           <span className="text-primary">✓ Visited</span>
         </div>
 
         {/* Random SideQuest FAB */}
-        <div className="absolute bottom-3 right-3 z-10">
+        <div className="pwa-inset-bottom absolute right-3 z-10">
           <RandomSidequestFab
             onClick={handleRandomSidequest}
             disabled={mappablePlaces.length === 0}
@@ -419,7 +419,7 @@ export function CollectionMapView({ places, loading }: CollectionMapViewProps) {
               onClick={() => setSelectedPlace(null)}
               aria-hidden
             />
-            <div className="absolute inset-x-3 bottom-3 z-30 sm:inset-x-auto sm:bottom-4 sm:left-4 sm:w-[min(100%,360px)]">
+            <div className="pwa-inset-bottom pwa-inset-x absolute z-30 sm:inset-x-auto sm:left-4 sm:w-[min(100%,360px)] sm:bottom-4">
               <MapPlacePopup place={selectedPlace} onClose={() => setSelectedPlace(null)} />
             </div>
           </>
