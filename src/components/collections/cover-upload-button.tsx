@@ -5,7 +5,7 @@ import { parseApiJson } from "@/lib/api/response";
 import { ImagePlus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useQueryInvalidation } from "@/lib/query/hooks";
 
 interface CoverUploadButtonProps {
   collectionId: string;
@@ -17,7 +17,7 @@ export function CoverUploadButton({ collectionId, className, compact }: CoverUpl
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const { afterUpdateCollection } = useQueryInvalidation();
 
   async function handleFile(file: File) {
     setLoading(true);
@@ -35,7 +35,7 @@ export function CoverUploadButton({ collectionId, className, compact }: CoverUpl
 
       if (!res.ok) throw new Error(json.error?.message ?? "Upload failed");
 
-      router.refresh();
+      afterUpdateCollection(collectionId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {

@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import {
   checkR2Key,
   describeAssetResolution,
@@ -8,6 +7,7 @@ import {
   listR2Sample,
 } from "@/lib/images/asset-debug";
 import { apiSuccess } from "@/lib/api/response";
+import { profileApiRoute } from "@/lib/debug/profiler";
 
 /**
  * Image / R2 diagnostics
@@ -16,18 +16,18 @@ import { apiSuccess } from "@/lib/api/response";
  * GET /api/debug/assets?key=collections/bir.png
  * GET /api/debug/assets?stored=/images_to_use/bir.png
  */
-export async function GET(req: NextRequest) {
-  const keyParam = req.nextUrl.searchParams.get("key");
-  const storedParam = req.nextUrl.searchParams.get("stored");
+export const GET = profileApiRoute("GET", "/api/debug/assets", async (req: Request) => {
+  const url = new URL(req.url);
+  const keyParam = url.searchParams.get("key");
+  const storedParam = url.searchParams.get("stored");
 
-  const [runtime, dbSamples, collectionsList, placesList, avatarsList] =
-    await Promise.all([
-      getRuntimeAssetInfo(),
-      getDbImageSamples(),
-      listR2Sample("collections/"),
-      listR2Sample("places/"),
-      listR2Sample("avatars/"),
-    ]);
+  const [runtime, dbSamples, collectionsList, placesList, avatarsList] = await Promise.all([
+    getRuntimeAssetInfo(),
+    getDbImageSamples(),
+    listR2Sample("collections/"),
+    listR2Sample("places/"),
+    listR2Sample("avatars/"),
+  ]);
 
   const probeKeys = [
     "collections/bir.png",
@@ -70,8 +70,6 @@ export async function GET(req: NextRequest) {
     r2Checks,
     dbSamples,
     ...(storedParam ? { resolveStored: describeAssetResolution(storedParam) } : {}),
-    ...(keyParam
-      ? { resolveKey: await checkR2Key(keyParam) }
-      : {}),
+    ...(keyParam ? { resolveKey: await checkR2Key(keyParam) } : {}),
   });
-}
+});

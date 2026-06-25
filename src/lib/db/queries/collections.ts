@@ -1,4 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { profileDb } from "@/lib/debug/profiler";
+import type {
+  RpcCollectionFilterCounts,
+  RpcRecentPlaceRow,
+  RpcTopTagRow,
+} from "@/lib/db/rpc-types";
 import { resolveAssetUrl } from "@/lib/images/assets";
 import { getVisitStatusFromMetadata } from "@/lib/map/visit-status";
 import type { CollectionCard, PlaceCard } from "@/lib/db/types";
@@ -17,32 +23,64 @@ export function unwrapProfile(profiles: unknown): {
   return unwrapRelation(profiles);
 }
 
+const COLLECTION_CARD_SELECT =
+  "id, name, description, place_count, cover_image_url, is_public, profiles(display_name, avatar_url, username)";
+
+function buildCollectionCard(c: Record<string, unknown>, topTags: string[]): CollectionCard {
+  const owner = unwrapProfile(c.profiles);
+  return {
+    id: c.id as string,
+    name: c.name as string,
+    description: c.description as string | null,
+    placeCount: c.place_count as number,
+    coverImageUrl: resolveAssetUrl(c.cover_image_url as string | null),
+    isPublic: c.is_public as boolean,
+    topTags,
+    user: {
+      displayName: owner?.display_name ?? "Traveler",
+      avatarUrl: owner?.avatar_url ?? null,
+      username: owner?.username,
+    },
+  };
+}
+
+/** One PostgreSQL round-trip — GROUP BY + window rank in DB (migration 007). */
+export async function getCollectionsTopTagsMap(
+  collectionIds: string[],
+  limitPerCollection = 4
+): Promise<Map<string, string[]>> {
+  const result = new Map<string, string[]>(collectionIds.map((id) => [id, []]));
+  if (collectionIds.length === 0) return result;
+
+  return profileDb("Collections Top Tags Query", async () => {
+    const supabase = createAdminClient();
+
+    const { data, error } = await supabase.rpc("get_collections_top_tags", {
+      p_collection_ids: collectionIds,
+      p_limit_per_collection: limitPerCollection,
+    });
+
+    if (error) throw error;
+
+    for (const row of (data ?? []) as RpcTopTagRow[]) {
+      const tags = result.get(row.collection_id) ?? [];
+      tags.push(row.tag_name);
+      result.set(row.collection_id, tags);
+    }
+
+    return result;
+  });
+}
+
 async function mapCollectionRows(
   collections: Record<string, unknown>[]
 ): Promise<CollectionCard[]> {
-  const result: CollectionCard[] = [];
+  const ids = collections.map((c) => c.id as string);
+  const topTagsMap = await getCollectionsTopTagsMap(ids, 4);
 
-  for (const c of collections) {
-    const topTags = await getCollectionTopTags(c.id as string, 4);
-    const owner = unwrapProfile(c.profiles);
-
-    result.push({
-      id: c.id as string,
-      name: c.name as string,
-      description: c.description as string | null,
-      placeCount: c.place_count as number,
-      coverImageUrl: resolveAssetUrl(c.cover_image_url as string | null),
-      isPublic: c.is_public as boolean,
-      topTags,
-      user: {
-        displayName: owner?.display_name ?? "Traveler",
-        avatarUrl: owner?.avatar_url ?? null,
-        username: owner?.username,
-      },
-    });
-  }
-
-  return result;
+  return profileDb("Collections Mapping", async () =>
+    collections.map((c) => buildCollectionCard(c, topTagsMap.get(c.id as string) ?? []))
+  );
 }
 
 export function canAccessCollection(
@@ -54,149 +92,102 @@ export function canAccessCollection(
 }
 
 export async function getMyCollections(profileId: string): Promise<CollectionCard[]> {
-  const supabase = createAdminClient();
+  return profileDb("My Collections Query", async () => {
+    const supabase = createAdminClient();
 
-  const { data: collections, error } = await supabase
-    .from("collections")
-    .select("id, name, description, place_count, cover_image_url, is_public, profiles(display_name, avatar_url, username)")
-    .eq("user_id", profileId)
-    .eq("is_deleted", false)
-    .order("updated_at", { ascending: false });
+    const { data: collections, error } = await supabase
+      .from("collections")
+      .select(COLLECTION_CARD_SELECT)
+      .eq("user_id", profileId)
+      .eq("is_deleted", false)
+      .order("updated_at", { ascending: false });
 
-  if (error) throw error;
-  if (!collections?.length) return [];
+    if (error) throw error;
+    if (!collections?.length) return [];
 
-  return mapCollectionRows(collections as Record<string, unknown>[]);
+    return mapCollectionRows(collections as Record<string, unknown>[]);
+  });
 }
 
 export async function getPublicCollections(limit = 24): Promise<CollectionCard[]> {
-  const supabase = createAdminClient();
+  return profileDb("Public Collections Query", async () => {
+    const supabase = createAdminClient();
 
-  const { data: collections, error } = await supabase
-    .from("collections")
-    .select("id, name, description, place_count, cover_image_url, is_public, profiles(display_name, avatar_url, username)")
-    .eq("is_public", true)
-    .eq("is_deleted", false)
-    .order("updated_at", { ascending: false })
-    .limit(limit);
+    const { data: collections, error } = await supabase
+      .from("collections")
+      .select(COLLECTION_CARD_SELECT)
+      .eq("is_public", true)
+      .eq("is_deleted", false)
+      .order("updated_at", { ascending: false })
+      .limit(limit);
 
-  if (error) throw error;
-  if (!collections?.length) return [];
+    if (error) throw error;
+    if (!collections?.length) return [];
 
-  return mapCollectionRows(collections as Record<string, unknown>[]);
+    return mapCollectionRows(collections as Record<string, unknown>[]);
+  });
 }
 
 /** @deprecated Use getMyCollections */
 export async function getAllCollections(): Promise<CollectionCard[]> {
-  const supabase = createAdminClient();
+  return profileDb("All Collections Query", async () => {
+    const supabase = createAdminClient();
 
-  const { data: collections, error } = await supabase
-    .from("collections")
-    .select("id, name, description, place_count, cover_image_url, is_public, profiles(display_name, avatar_url, username)")
-    .eq("is_deleted", false)
-    .order("updated_at", { ascending: false });
+    const { data: collections, error } = await supabase
+      .from("collections")
+      .select(COLLECTION_CARD_SELECT)
+      .eq("is_deleted", false)
+      .order("updated_at", { ascending: false });
 
-  if (error) throw error;
-  if (!collections?.length) return [];
+    if (error) throw error;
+    if (!collections?.length) return [];
 
-  return mapCollectionRows(collections as Record<string, unknown>[]);
+    return mapCollectionRows(collections as Record<string, unknown>[]);
+  });
 }
 
 export async function getCollectionTopTags(collectionId: string, limit = 6): Promise<string[]> {
-  const supabase = createAdminClient();
-
-  const { data: placeIds } = await supabase
-    .from("collection_places")
-    .select("place_id")
-    .eq("collection_id", collectionId);
-
-  if (!placeIds?.length) return [];
-
-  const ids = placeIds.map((p) => p.place_id);
-
-  const { data: tagRows } = await supabase
-    .from("place_tags")
-    .select("tag_id, tags(name)")
-    .in("place_id", ids);
-
-  const counts = new Map<string, number>();
-  for (const row of tagRows ?? []) {
-    const name = unwrapRelation<{ name: string }>(row.tags)?.name;
-    if (!name) continue;
-    counts.set(name, (counts.get(name) ?? 0) + 1);
-  }
-
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([name]) => name);
+  const map = await getCollectionsTopTagsMap([collectionId], limit);
+  return map.get(collectionId) ?? [];
 }
 
 export async function getCollectionById(id: string, viewerProfileId?: string | null) {
-  const supabase = createAdminClient();
+  return profileDb("Collection By Id Query", async () => {
+    const supabase = createAdminClient();
 
-  const { data, error } = await supabase
-    .from("collections")
-    .select("*, profiles(display_name, avatar_url, username)")
-    .eq("id", id)
-    .eq("is_deleted", false)
-    .single();
+    const { data, error } = await supabase
+      .from("collections")
+      .select("id, user_id, name, description, place_count, cover_image_url, cover_source, is_public, is_deleted, source, created_at, updated_at, profiles(display_name, avatar_url, username)")
+      .eq("id", id)
+      .eq("is_deleted", false)
+      .single();
 
-  if (error) throw error;
+    if (error) throw error;
 
-  if (!canAccessCollection(data, viewerProfileId)) {
-    throw new Error("Collection not found");
-  }
+    if (!canAccessCollection(data, viewerProfileId)) {
+      throw new Error("Collection not found");
+    }
 
-  return data;
+    return data;
+  });
 }
 
 export async function getCollectionFilters(collectionId: string) {
-  const supabase = createAdminClient();
+  return profileDb("Collection Filters Query", async () => {
+    const supabase = createAdminClient();
 
-  const { data: placeIds } = await supabase
-    .from("collection_places")
-    .select("place_id")
-    .eq("collection_id", collectionId);
+    const { data, error } = await supabase.rpc("get_collection_filter_counts", {
+      p_collection_id: collectionId,
+    });
 
-  if (!placeIds?.length) {
-    return { categories: [], tags: [] };
-  }
+    if (error) throw error;
 
-  const ids = placeIds.map((p) => p.place_id);
-
-  const { data: places } = await supabase
-    .from("places")
-    .select("category_id, categories(slug, name)")
-    .in("id", ids);
-
-  const catCounts = new Map<string, { slug: string; name: string; count: number }>();
-  for (const p of places ?? []) {
-    const cat = unwrapRelation<{ slug: string; name: string }>(p.categories);
-    if (!cat) continue;
-    const existing = catCounts.get(cat.slug) ?? { ...cat, count: 0 };
-    existing.count++;
-    catCounts.set(cat.slug, existing);
-  }
-
-  const { data: tagRows } = await supabase
-    .from("place_tags")
-    .select("tag_id, tags(slug, name)")
-    .in("place_id", ids);
-
-  const tagCounts = new Map<string, { slug: string; name: string; count: number }>();
-  for (const row of tagRows ?? []) {
-    const tag = unwrapRelation<{ slug: string; name: string }>(row.tags);
-    if (!tag) continue;
-    const existing = tagCounts.get(tag.slug) ?? { ...tag, count: 0 };
-    existing.count++;
-    tagCounts.set(tag.slug, existing);
-  }
-
-  return {
-    categories: [...catCounts.values()].sort((a, b) => b.count - a.count),
-    tags: [...tagCounts.values()].sort((a, b) => b.count - a.count),
-  };
+    const payload = (data ?? { categories: [], tags: [] }) as RpcCollectionFilterCounts;
+    return {
+      categories: payload.categories ?? [],
+      tags: payload.tags ?? [],
+    };
+  });
 }
 
 function mapPlaceRow(row: Record<string, unknown>): PlaceCard {
@@ -230,6 +221,35 @@ function mapPlaceRow(row: Record<string, unknown>): PlaceCard {
   };
 }
 
+function mapRecentPlaceFromRpc(row: RpcRecentPlaceRow): PlaceCard {
+  return {
+    id: row.id,
+    name: row.name,
+    category:
+      row.category_slug && row.category_name
+        ? { slug: row.category_slug, name: row.category_name }
+        : null,
+    tags: row.tags ?? [],
+    address: row.address,
+    rating: row.rating != null ? Number(row.rating) : null,
+    coverImageUrl: resolveAssetUrl(row.cover_image_url),
+    shortDescription: row.short_text,
+    googleMapsUrl: row.google_maps_url,
+    likelyAudience: row.likely_audience,
+    likelyVibe: row.likely_vibe,
+    latitude: row.latitude != null ? Number(row.latitude) : null,
+    longitude: row.longitude != null ? Number(row.longitude) : null,
+    visitStatus: getVisitStatusFromMetadata(row.metadata),
+    collectionName: row.collection_name ?? undefined,
+  };
+}
+
+const PLACE_LIST_SELECT = `id, name, address, rating, cover_image_url, google_maps_url, likely_audience, likely_vibe,
+       latitude, longitude, metadata,
+       categories(slug, name),
+       place_descriptions(short_text),
+       place_tags(tags(slug, name))`;
+
 export async function getPlaces(params: {
   collectionId?: string;
   q?: string;
@@ -238,153 +258,157 @@ export async function getPlaces(params: {
   limit?: number;
   offset?: number;
 }): Promise<{ places: PlaceCard[]; total: number }> {
-  const supabase = createAdminClient();
-  const limit = params.limit ?? 50;
-  const offset = params.offset ?? 0;
+  return profileDb("Places Query", async () => {
+    const supabase = createAdminClient();
+    const limit = params.limit ?? 50;
+    const offset = params.offset ?? 0;
 
-  let placeIds: string[] | null = null;
-  let sortOrder = new Map<string, number>();
-
-  if (params.collectionId) {
-    const { data } = await supabase
-      .from("collection_places")
-      .select("place_id, sort_order")
-      .eq("collection_id", params.collectionId)
-      .order("sort_order", { ascending: true });
-    placeIds = data?.map((p) => p.place_id) ?? [];
-    sortOrder = new Map(data?.map((p) => [p.place_id, p.sort_order]) ?? []);
-    if (placeIds.length === 0) return { places: [], total: 0 };
-  }
-
-  let query = supabase
-    .from("places")
-    .select(
-      `id, name, address, rating, cover_image_url, google_maps_url, likely_audience, likely_vibe,
-       latitude, longitude, metadata,
-       categories(slug, name),
-       place_descriptions(short_text),
-       place_tags(tags(slug, name))`,
-      { count: "exact" }
-    );
-
-  if (placeIds) query = query.in("id", placeIds);
-  else query = query.order("name");
-
-  if (params.category) {
-    const { data: cat } = await supabase.from("categories").select("id").eq("slug", params.category).single();
-    if (cat) query = query.eq("category_id", cat.id);
-  }
-
-  if (params.q?.trim()) {
-    query = query.textSearch("search_vector", params.q.trim(), { type: "websearch", config: "english" });
-  }
-
-  query = query.range(offset, offset + limit - 1);
-
-  const { data, error, count } = await query;
-  if (error) throw error;
-
-  let places = (data ?? []).map((row) => mapPlaceRow(row as Record<string, unknown>));
-
-  if (params.collectionId && sortOrder.size > 0) {
-    places.sort(
-      (a, b) => (sortOrder.get(a.id) ?? 0) - (sortOrder.get(b.id) ?? 0)
-    );
-  }
-
-  if (params.tags?.length) {
-    const filtered: PlaceCard[] = [];
-    for (const place of places) {
-      const slugs = new Set(place.tags.map((t) => t.slug));
-      if (params.tags.every((t) => slugs.has(t))) filtered.push(place);
+    let categoryId: string | null = null;
+    if (params.category) {
+      const { data: cat } = await supabase
+        .from("categories")
+        .select("id")
+        .eq("slug", params.category)
+        .single();
+      categoryId = cat?.id ?? null;
     }
-    places = filtered;
-  }
 
-  return { places, total: count ?? places.length };
+    if (params.collectionId) {
+      let query = supabase
+        .from("places")
+        .select(
+          `id, name, address, rating, cover_image_url, google_maps_url, likely_audience, likely_vibe,
+           latitude, longitude, metadata,
+           categories(slug, name),
+           place_descriptions(short_text),
+           place_tags(tags(slug, name)),
+           collection_places!inner(sort_order)`,
+          { count: "exact" }
+        )
+        .eq("collection_places.collection_id", params.collectionId)
+        .order("sort_order", { referencedTable: "collection_places", ascending: true });
+
+      if (categoryId) query = query.eq("category_id", categoryId);
+      if (params.q?.trim()) {
+        query = query.textSearch("search_vector", params.q.trim(), {
+          type: "websearch",
+          config: "english",
+        });
+      }
+      query = query.range(offset, offset + limit - 1);
+
+      const { data, error, count } = await query;
+      if (error) throw error;
+
+      let places = (data ?? []).map((row) => mapPlaceRow(row as Record<string, unknown>));
+      if (params.tags?.length) {
+        places = places.filter((place) => {
+          const slugs = new Set(place.tags.map((t) => t.slug));
+          return params.tags!.every((t) => slugs.has(t));
+        });
+      }
+
+      return { places, total: count ?? places.length };
+    }
+
+    let query = supabase
+      .from("places")
+      .select(PLACE_LIST_SELECT, { count: "exact" })
+      .order("name");
+
+    if (categoryId) query = query.eq("category_id", categoryId);
+    if (params.q?.trim()) {
+      query = query.textSearch("search_vector", params.q.trim(), {
+        type: "websearch",
+        config: "english",
+      });
+    }
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    let places = (data ?? []).map((row) => mapPlaceRow(row as Record<string, unknown>));
+    if (params.tags?.length) {
+      places = places.filter((place) => {
+        const slugs = new Set(place.tags.map((t) => t.slug));
+        return params.tags!.every((t) => slugs.has(t));
+      });
+    }
+
+    return { places, total: count ?? places.length };
+  });
 }
 
+/** Single RPC round-trip — joins + aggregation in PostgreSQL (migration 008). */
 export async function getRecentPlaces(profileId: string, limit = 12): Promise<PlaceCard[]> {
-  const supabase = createAdminClient();
+  return profileDb("Recent Places Query", async () => {
+    const supabase = createAdminClient();
 
-  const { data: ownedCollections } = await supabase
-    .from("collections")
-    .select("id")
-    .eq("user_id", profileId)
-    .eq("is_deleted", false);
+    const { data, error } = await supabase.rpc("get_recent_places_for_user", {
+      p_user_id: profileId,
+      p_limit: limit,
+    });
 
-  const collectionIds = ownedCollections?.map((c) => c.id) ?? [];
-  if (collectionIds.length === 0) return [];
+    if (error) throw error;
 
-  const { data: links } = await supabase
-    .from("collection_places")
-    .select("place_id")
-    .in("collection_id", collectionIds);
-
-  const placeIds = [...new Set(links?.map((l) => l.place_id) ?? [])];
-  if (placeIds.length === 0) return [];
-
-  const { data, error } = await supabase
-    .from("places")
-    .select(
-      `id, name, address, rating, cover_image_url, google_maps_url, likely_audience, likely_vibe, created_at,
-       latitude, longitude, metadata,
-       categories(slug, name),
-       place_descriptions(short_text),
-       place_tags(tags(slug, name)),
-       collection_places(collections(name))`
-    )
-    .in("id", placeIds)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error) throw error;
-
-  return (data ?? []).map((row) => {
-    const mapped = mapPlaceRow(row as Record<string, unknown>);
-    const collRows = row.collection_places as { collections: unknown }[] | null;
-    const collectionName = unwrapRelation<{ name: string }>(collRows?.[0]?.collections)?.name;
-    return { ...mapped, collectionName };
+    const rows = (data ?? []) as RpcRecentPlaceRow[];
+    return rows.map(mapRecentPlaceFromRpc);
   });
 }
 
 export async function getPlaceById(id: string, viewerProfileId?: string | null) {
-  const supabase = createAdminClient();
+  return profileDb("Place By Id Query", async () => {
+    const supabase = createAdminClient();
 
-  const { data, error } = await supabase
-    .from("places")
-    .select(
-      `*, categories(slug, name),
-       place_descriptions(short_text, long_text, interesting_facts),
-       place_tags(tags(slug, name)),
-       collection_places(collections(id, name, user_id, is_public))`
-    )
-    .eq("id", id)
-    .single();
+    const { data, error } = await supabase
+      .from("places")
+      .select(
+        `id, user_id, google_place_id, google_maps_url, name, address, latitude, longitude, rating,
+         cover_image_url, category_id, likely_audience, likely_vibe, category_source, category_confidence,
+         import_notes, search_text, search_enriched, enrichment_status, metadata, created_at, updated_at,
+         categories(slug, name),
+         place_descriptions(short_text, long_text, interesting_facts),
+         place_tags(tags(slug, name)),
+         collection_places(collections(id, name, user_id, is_public))`
+      )
+      .eq("id", id)
+      .single();
 
-  if (error) throw error;
+    if (error) throw error;
 
-  const collRows = (data.collection_places as { collections: unknown }[] | null) ?? [];
-  const accessible = collRows.some((row) => {
-    const coll = unwrapRelation<{ user_id: string; is_public: boolean }>(row.collections);
-    return coll && canAccessCollection(coll, viewerProfileId);
+    const collRows = (data.collection_places as { collections: unknown }[] | null) ?? [];
+    const accessible = collRows.some((row) => {
+      const coll = unwrapRelation<{ user_id: string; is_public: boolean }>(row.collections);
+      return coll && canAccessCollection(coll, viewerProfileId);
+    });
+
+    if (!accessible && data.user_id !== viewerProfileId) {
+      throw new Error("Place not found");
+    }
+
+    return data;
   });
-
-  if (!accessible && data.user_id !== viewerProfileId) {
-    throw new Error("Place not found");
-  }
-
-  return data;
 }
 
 export async function isCollectionOwner(collectionId: string, profileId: string): Promise<boolean> {
-  const supabase = createAdminClient();
-  const { data } = await supabase
-    .from("collections")
-    .select("user_id")
-    .eq("id", collectionId)
-    .eq("is_deleted", false)
-    .maybeSingle();
+  return profileDb("Collection Owner Query", async () => {
+    const supabase = createAdminClient();
+    const { data } = await supabase
+      .from("collections")
+      .select("user_id")
+      .eq("id", collectionId)
+      .eq("is_deleted", false)
+      .maybeSingle();
 
-  return data?.user_id === profileId;
+    return data?.user_id === profileId;
+  });
+}
+
+/** Shared helper for search results — avoids duplicating CollectionCard mapping. */
+export function mapSearchCollectionRow(
+  c: Record<string, unknown>,
+  topTags: string[]
+): CollectionCard {
+  return buildCollectionCard(c, topTags);
 }

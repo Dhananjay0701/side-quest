@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQueryInvalidation } from "@/lib/query/hooks";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ interface UploadDialogProps {
 
 export function UploadDialog({ trigger }: UploadDialogProps) {
   const router = useRouter();
+  const { afterUpload } = useQueryInvalidation();
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -99,7 +101,7 @@ export function UploadDialog({ trigger }: UploadDialogProps) {
           setStatus("Done! Refreshing...");
           setOpen(false);
           resetForm();
-          router.refresh();
+          afterUpload();
           if (job.collectionId) router.push(`/collections/${job.collectionId}`);
           return;
         }

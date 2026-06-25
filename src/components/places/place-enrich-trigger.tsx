@@ -3,8 +3,8 @@
 import { parseApiJson } from "@/lib/api/response";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2, Sparkles } from "lucide-react";
+import { useQueryInvalidation } from "@/lib/query/hooks";
 
 interface PlaceEnrichTriggerProps {
   placeId: string;
@@ -19,7 +19,7 @@ export function PlaceEnrichTrigger({
   enrichmentStatus,
   coverImageUrl,
 }: PlaceEnrichTriggerProps) {
-  const router = useRouter();
+  const { afterPlaceUpdate } = useQueryInvalidation();
   const needsEnrichment = !searchEnriched || !coverImageUrl;
   const [status, setStatus] = useState<"idle" | "enriching" | "done" | "error">(
     needsEnrichment ? "idle" : "done"
@@ -39,7 +39,7 @@ export function PlaceEnrichTrigger({
         if (!res.ok) throw new Error(json.error?.message ?? "Enrichment failed");
         if (cancelled) return;
         setStatus("done");
-        router.refresh();
+        afterPlaceUpdate(placeId);
       } catch (err) {
         if (cancelled) return;
         setStatus("error");
@@ -51,7 +51,7 @@ export function PlaceEnrichTrigger({
     return () => {
       cancelled = true;
     };
-  }, [placeId, needsEnrichment, router]);
+  }, [placeId, needsEnrichment, afterPlaceUpdate]);
 
   if (searchEnriched && (coverImageUrl || status === "done")) {
     return (

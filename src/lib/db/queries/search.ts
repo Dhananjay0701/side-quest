@@ -1,8 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { profileDb } from "@/lib/debug/profiler";
 import {
   canAccessCollection,
-  getCollectionTopTags,
-  unwrapProfile,
+  getCollectionsTopTagsMap,
+  mapSearchCollectionRow,
   unwrapRelation,
 } from "@/lib/db/queries/collections";
 import { resolveAssetUrl } from "@/lib/images/assets";
@@ -13,6 +14,7 @@ export async function globalSearch(
   viewerProfileId?: string | null,
   limit = 20
 ): Promise<{ collections: CollectionCard[]; places: PlaceCard[] }> {
+  return profileDb("Search Query", async () => {
   const supabase = createAdminClient();
   const trimmed = q.trim();
   if (!trimmed) return { collections: [], places: [] };
@@ -25,25 +27,15 @@ export async function globalSearch(
     .limit(24);
 
   const collectionResults: CollectionCard[] = [];
-  for (const c of collections ?? []) {
-    if (!canAccessCollection(c, viewerProfileId)) continue;
-    const topTags = await getCollectionTopTags(c.id, 4);
-    const owner = unwrapProfile(c.profiles);
-    collectionResults.push({
-      id: c.id,
-      name: c.name,
-      description: c.description,
-      placeCount: c.place_count,
-      coverImageUrl: resolveAssetUrl(c.cover_image_url),
-      isPublic: c.is_public,
-      topTags,
-      user: {
-        displayName: owner?.display_name ?? "Traveler",
-        avatarUrl: owner?.avatar_url ?? null,
-        username: owner?.username,
-      },
-    });
+  const visible = (collections ?? []).filter((c) => canAccessCollection(c, viewerProfileId));
+  const topTagsMap = await getCollectionsTopTagsMap(
+    visible.slice(0, 8).map((c) => c.id),
+    4
+  );
+
+  for (const c of visible) {
     if (collectionResults.length >= 8) break;
+    collectionResults.push(mapSearchCollectionRow(c as Record<string, unknown>, topTagsMap.get(c.id) ?? []));
   }
 
   const { data: places } = await supabase
@@ -93,4 +85,5 @@ export async function globalSearch(
   }
 
   return { collections: collectionResults, places: placeResults.slice(0, limit) };
+  });
 }

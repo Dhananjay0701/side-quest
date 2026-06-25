@@ -61,6 +61,5 @@ export function resolveAssetUrl(stored: string | null | undefined): string | nul
     return `${appBase}/cdn/${key}`;
   }
 
-  // Local dev: fall back to public/ folder (mirrors R2 key layout)
   return `/images_to_use/${key}`;
 }

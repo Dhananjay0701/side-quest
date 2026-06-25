@@ -4,6 +4,9 @@ import {
   assetFolderForPrefix,
   buildStorageKey,
 } from "@/lib/images/assets";
+import { profileR2 } from "@/lib/debug/profiler";
+import { isProfilingEnabled } from "@/lib/debug/enabled";
+import { recordR2Transfer } from "@/lib/debug/metrics";
 
 export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 export const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -33,10 +36,25 @@ async function uploadToR2(
   const bucket = await getR2Bucket();
   if (!bucket) return false;
 
-  await bucket.put(key, data, {
-    httpMetadata: { contentType },
+  const put = async () => {
+    await bucket.put(key, data, {
+      httpMetadata: { contentType },
+    });
+    return true;
+  };
+
+  if (!isProfilingEnabled()) return put();
+
+  return profileR2("R2 Upload", async () => {
+    const started = performance.now();
+    const ok = await put();
+    recordR2Transfer({
+      kind: "upload",
+      bytes: data.byteLength,
+      durationMs: performance.now() - started,
+    });
+    return ok;
   });
-  return true;
 }
 
 /** Returns R2 storage key (e.g. `collections/cover-123.jpg`) */

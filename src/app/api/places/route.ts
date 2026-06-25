@@ -1,7 +1,8 @@
 import { getPlaces } from "@/lib/db/queries/collections";
 import { apiSuccess, apiError } from "@/lib/api/response";
+import { profileApiRoute } from "@/lib/debug/profiler";
 
-export async function GET(req: Request) {
+export const GET = profileApiRoute("GET", "/api/places", async (req: Request) => {
   try {
     const { searchParams } = new URL(req.url);
     const collectionId = searchParams.get("collectionId") ?? undefined;
@@ -16,4 +17,4 @@ export async function GET(req: Request) {
   } catch (err) {
     return apiError("PLACES_ERROR", err instanceof Error ? err.message : "Failed to fetch places", 500);
   }
-}
+});

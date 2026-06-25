@@ -1,7 +1,8 @@
 import { getAuthProfile } from "@/lib/auth/session";
 import { apiSuccess, apiError } from "@/lib/api/response";
+import { profileApiRoute } from "@/lib/debug/profiler";
 
-export async function GET() {
+export const GET = profileApiRoute("GET", "/api/me", async () => {
   try {
     const profile = await getAuthProfile();
     if (!profile) {
@@ -18,4 +19,4 @@ export async function GET() {
   } catch (err) {
     return apiError("USER_ERROR", err instanceof Error ? err.message : "Failed to get user", 500);
   }
-}
+});

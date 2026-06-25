@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { Globe, Lock, Loader2 } from "lucide-react";
+import { useQueryInvalidation } from "@/lib/query/hooks";
 import { cn } from "@/lib/utils";
 
 interface VisibilityToggleProps {
@@ -12,7 +12,7 @@ interface VisibilityToggleProps {
 }
 
 export function VisibilityToggle({ collectionId, isPublic: initial, compact }: VisibilityToggleProps) {
-  const router = useRouter();
+  const { afterUpdateCollection } = useQueryInvalidation();
   const [isPublic, setIsPublic] = useState(initial);
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +28,7 @@ export function VisibilityToggle({ collectionId, isPublic: initial, compact }: V
 
     if (res.ok) {
       setIsPublic(next);
-      router.refresh();
+      afterUpdateCollection(collectionId);
     }
     setLoading(false);
   }

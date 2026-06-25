@@ -3,8 +3,8 @@
 import { parseApiJson } from "@/lib/api/response";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { MoreHorizontal, Trash2 } from "lucide-react";
+import { useQueryInvalidation } from "@/lib/query/hooks";
 
 interface CollectionCardMenuProps {
   collectionId: string;
@@ -12,7 +12,7 @@ interface CollectionCardMenuProps {
 }
 
 export function CollectionCardMenu({ collectionId, collectionName }: CollectionCardMenuProps) {
-  const router = useRouter();
+  const { afterDeleteCollection } = useQueryInvalidation();
   const menuRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -42,7 +42,7 @@ export function CollectionCardMenu({ collectionId, collectionName }: CollectionC
       const json = await parseApiJson(res);
       if (!res.ok) throw new Error(json.error?.message ?? "Delete failed");
       setOpen(false);
-      router.refresh();
+      afterDeleteCollection();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to delete collection");
     } finally {

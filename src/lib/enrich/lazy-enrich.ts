@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { enrichPlaceWithLlm, getEnrichmentModel, getPromptVersion } from "@/lib/enrich/categorize";
 import { enrichPlacePhotoIfNeeded } from "@/lib/enrich/photo-enrich";
 import { unwrapRelation } from "@/lib/db/queries/collections";
+import { profileAI } from "@/lib/debug/profiler";
 
 async function upsertTag(
   supabase: ReturnType<typeof createAdminClient>,
@@ -102,6 +103,7 @@ export async function applyPlaceEnrichment(params: {
 }
 
 export async function runLazyPlaceEnrichment(placeId: string) {
+  return profileAI("Place Enrichment", async () => {
   const supabase = createAdminClient();
 
   const { data: place, error } = await supabase
@@ -153,4 +155,5 @@ export async function runLazyPlaceEnrichment(placeId: string) {
       .eq("id", placeId);
     throw err;
   }
+  });
 }

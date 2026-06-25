@@ -1,4 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { profileAI } from "@/lib/debug/profiler";
+import { recordAiMetric } from "@/lib/debug/metrics";
 
 export const GEMINI_MODEL = "gemini-3.1-flash-lite";
 
@@ -11,20 +13,32 @@ export function getGeminiClient() {
 }
 
 export async function generateGeminiJson(systemPrompt: string, userPrompt: string): Promise<string> {
-  const client = getGeminiClient();
-  const model = client.getGenerativeModel({
-    model: GEMINI_MODEL,
-    systemInstruction: systemPrompt,
-    generationConfig: {
-      temperature: 0.2,
-      responseMimeType: "application/json",
-    },
-  });
+  return profileAI("Gemini", async () => {
+    const started = Date.now();
+    const client = getGeminiClient();
+    const model = client.getGenerativeModel({
+      model: GEMINI_MODEL,
+      systemInstruction: systemPrompt,
+      generationConfig: {
+        temperature: 0.2,
+        responseMimeType: "application/json",
+      },
+    });
 
-  const result = await model.generateContent(userPrompt);
-  const text = result.response.text();
-  if (!text) throw new Error("Empty Gemini response");
-  return text;
+    const result = await model.generateContent(userPrompt);
+    const text = result.response.text();
+    if (!text) throw new Error("Empty Gemini response");
+
+    recordAiMetric({
+      model: GEMINI_MODEL,
+      operation: "generateJson",
+      latencyMs: Date.now() - started,
+      promptTokens: userPrompt.length,
+      completionTokens: text.length,
+    });
+
+    return text;
+  });
 }
 
 export function getEnrichmentModel(): string {

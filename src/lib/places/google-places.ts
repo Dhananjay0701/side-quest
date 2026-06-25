@@ -1,4 +1,5 @@
 import { extractPlaceNameFromUrl } from "@/lib/utils/google-maps";
+import { profileExternal } from "@/lib/debug/profiler";
 
 const PLACES_BASE = "https://places.googleapis.com/v1";
 
@@ -43,6 +44,7 @@ export function isGooglePlacesConfigured(): boolean {
 }
 
 export async function textSearchPlace(textQuery: string): Promise<GooglePlaceLookupResult | null> {
+  return profileExternal("Google Places Text Search", async () => {
   const res = await fetch(`${PLACES_BASE}/places:searchText`, {
     method: "POST",
     headers: placesHeaders(
@@ -79,9 +81,11 @@ export async function textSearchPlace(textQuery: string): Promise<GooglePlaceLoo
     latitude: place.location?.latitude,
     longitude: place.location?.longitude,
   };
+  });
 }
 
 export async function getPlaceDetails(placesApiId: string): Promise<GooglePlaceLookupResult | null> {
+  return profileExternal("Google Places Details", async () => {
   const resourceId = normalizePlaceResourceId(placesApiId);
   const res = await fetch(`${PLACES_BASE}/places/${resourceId}`, {
     headers: placesHeaders(
@@ -115,6 +119,7 @@ export async function getPlaceDetails(placesApiId: string): Promise<GooglePlaceL
     latitude: place.location?.latitude,
     longitude: place.location?.longitude,
   };
+  });
 }
 
 export function buildPlaceTextQuery(params: {
@@ -154,6 +159,7 @@ export async function fetchFirstPlacePhotoBytes(
   photoName: string,
   maxPx = 800
 ): Promise<{ buffer: Buffer; contentType: string }> {
+  return profileExternal("Google Places Photo", async () => {
   const key = getApiKey();
   if (!key) throw new Error("GOOGLE_MAPS_API_KEY is not configured");
 
@@ -167,4 +173,5 @@ export async function fetchFirstPlacePhotoBytes(
   const contentType = res.headers.get("content-type") ?? "image/jpeg";
   const arrayBuffer = await res.arrayBuffer();
   return { buffer: Buffer.from(arrayBuffer), contentType };
+  });
 }

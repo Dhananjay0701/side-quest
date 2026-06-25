@@ -1,8 +1,9 @@
 import { getAuthProfile } from "@/lib/auth/session";
 import { globalSearch } from "@/lib/db/queries/search";
 import { apiSuccess, apiError } from "@/lib/api/response";
+import { profileApiRoute } from "@/lib/debug/profiler";
 
-export async function GET(req: Request) {
+export const GET = profileApiRoute("GET", "/api/search", async (req: Request) => {
   try {
     const profile = await getAuthProfile();
     const { searchParams } = new URL(req.url);
@@ -14,4 +15,4 @@ export async function GET(req: Request) {
   } catch (err) {
     return apiError("SEARCH_ERROR", err instanceof Error ? err.message : "Search failed", 500);
   }
-}
+});

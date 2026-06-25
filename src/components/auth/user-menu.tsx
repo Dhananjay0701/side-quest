@@ -9,6 +9,7 @@ import { UploadDialog } from "@/components/import/upload-dialog";
 import { InstallAppMenuItem } from "@/components/pwa/install-app-menu-item";
 import { InstallAppModal } from "@/components/pwa/install-app-modal";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { useQueryInvalidation } from "@/lib/query/hooks";
 import type { Profile } from "@/lib/db/types";
 
 interface UserMenuProps {
@@ -18,6 +19,7 @@ interface UserMenuProps {
 
 export function UserMenu({ profile, initials }: UserMenuProps) {
   const router = useRouter();
+  const { afterLogout } = useQueryInvalidation();
   const [open, setOpen] = useState(false);
   const [installModalOpen, setInstallModalOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -26,8 +28,8 @@ export function UserMenu({ profile, initials }: UserMenuProps) {
     setSigningOut(true);
     const supabase = createBrowserSupabaseClient();
     await supabase.auth.signOut();
+    afterLogout();
     router.push("/login");
-    router.refresh();
   }
 
   return (

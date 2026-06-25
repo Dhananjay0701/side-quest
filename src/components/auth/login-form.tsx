@@ -7,9 +7,11 @@ import { Loader2 } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useQueryInvalidation } from "@/lib/query/hooks";
 
 export function LoginForm() {
   const router = useRouter();
+  const { afterLogin } = useQueryInvalidation();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/";
   const [email, setEmail] = useState("");
@@ -32,7 +34,7 @@ export function LoginForm() {
     }
 
     router.push(next);
-    router.refresh();
+    afterLogin();
   }
 
   async function handleGoogleLogin() {

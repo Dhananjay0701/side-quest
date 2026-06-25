@@ -7,15 +7,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { UserMenu } from "@/components/auth/user-menu";
 import { UploadDialog } from "@/components/import/upload-dialog";
 import { getProfileInitials } from "@/lib/auth/profile-utils";
-import type { Profile } from "@/lib/db/types";
+import { clientProfileToProfile, useProfileQuery } from "@/lib/query/hooks";
 import { cn } from "@/lib/utils";
 
-interface AppHeaderProps {
-  profile?: Profile | null;
-}
-
-export function AppHeader({ profile }: AppHeaderProps) {
+export function AppHeader() {
   const pathname = usePathname();
+  const { data: clientProfile, isPending } = useProfileQuery();
+  const profile = clientProfile ? clientProfileToProfile(clientProfile) : null;
 
   const initials = profile ? getProfileInitials(profile) : "RS";
 
@@ -24,40 +22,42 @@ export function AppHeader({ profile }: AppHeaderProps) {
     { label: "Explore", href: "/explore" },
   ];
 
-  const authControls = profile ? (
-    <UserMenu profile={profile} initials={initials} />
-  ) : (
-    <div className="flex items-center gap-2">
-      <Link
-        href="/login"
-        className="rounded-lg border border-border/60 px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground"
-      >
-        Sign in
-      </Link>
-      <Avatar className="h-8 w-8">
-        <AvatarFallback className="text-[10px] font-semibold text-muted">{initials}</AvatarFallback>
-      </Avatar>
-    </div>
-  );
+  const authControls =
+    profile && !isPending ? (
+      <UserMenu profile={profile} initials={initials} />
+    ) : (
+      <div className="flex items-center gap-2">
+        <Link
+          href="/login"
+          className="rounded-lg border border-border/60 px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground"
+        >
+          Sign in
+        </Link>
+        <Avatar className="h-8 w-8">
+          <AvatarFallback className="text-[10px] font-semibold text-muted">{initials}</AvatarFallback>
+        </Avatar>
+      </div>
+    );
 
-  const uploadButton = profile ? (
-    <UploadDialog
-      trigger={
-        <button className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-border hover:text-foreground">
-          <Upload className="h-3.5 w-3.5" />
-          Upload CSV
-        </button>
-      }
-    />
-  ) : (
-    <Link
-      href="/login?next=/"
-      className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-border hover:text-foreground"
-    >
-      <Upload className="h-3.5 w-3.5" />
-      Upload CSV
-    </Link>
-  );
+  const uploadButton =
+    profile && !isPending ? (
+      <UploadDialog
+        trigger={
+          <button className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-border hover:text-foreground">
+            <Upload className="h-3.5 w-3.5" />
+            Upload CSV
+          </button>
+        }
+      />
+    ) : (
+      <Link
+        href="/login?next=/"
+        className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-border hover:text-foreground"
+      >
+        <Upload className="h-3.5 w-3.5" />
+        Upload CSV
+      </Link>
+    );
 
   return (
     <header className="pwa-safe-top sticky top-0 z-50 border-b border-border/30 bg-[#0B1221]/95 backdrop-blur-xl">
@@ -96,7 +96,7 @@ export function AppHeader({ profile }: AppHeaderProps) {
         </nav>
       </div>
 
-      <div className="mx-auto hidden h-12 max-w-[1400px] items-center justify-between px-6 lg:flex">
+      <div className="relative mx-auto hidden h-12 max-w-[1400px] items-center justify-between px-6 lg:flex">
         <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/15 text-primary">
             <Compass className="h-3.5 w-3.5" />

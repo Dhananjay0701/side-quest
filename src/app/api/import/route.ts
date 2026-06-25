@@ -4,8 +4,9 @@ import { runImportPipeline } from "@/lib/import/pipeline";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { saveLocalImage } from "@/lib/images/save-local-image";
 import { apiSuccess, apiError } from "@/lib/api/response";
+import { profileApiRoute } from "@/lib/debug/profiler";
 
-export async function POST(req: Request) {
+export const POST = profileApiRoute("POST", "/api/import", async (req: Request) => {
   try {
     const profile = await requireAuthProfile();
 
@@ -99,4 +100,4 @@ export async function POST(req: Request) {
     }
     return apiError("IMPORT_ERROR", err instanceof Error ? err.message : "Import failed", 500);
   }
-}
+});

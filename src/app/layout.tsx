@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { AppHeader } from "@/components/layout/app-header";
+import { AppProviders } from "@/components/providers/app-providers";
 import { PwaRegister } from "@/components/pwa/pwa-register";
-import { getAuthProfile } from "@/lib/auth/session";
 import {
   PWA_APP_NAME,
   PWA_BACKGROUND_COLOR,
@@ -50,9 +50,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const profile = await getAuthProfile();
-
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <head>
@@ -75,9 +77,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body className={`${geistSans.variable} antialiased`}>
-        <PwaRegister />
-        <AppHeader profile={profile} />
-        <main className="mx-auto max-w-[1400px]">{children}</main>
+        <AppProviders>
+          <PwaRegister />
+          <AppHeader />
+          <main className="mx-auto max-w-[1400px]">{children}</main>
+        </AppProviders>
       </body>
     </html>
   );
