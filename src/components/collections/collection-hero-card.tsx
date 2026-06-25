@@ -11,9 +11,10 @@ import type { CollectionCard } from "@/lib/db/types";
 interface CollectionHeroCardProps {
   collection: CollectionCard;
   className?: string;
+  priorityImage?: boolean;
 }
 
-export function CollectionHeroCard({ collection, className }: CollectionHeroCardProps) {
+export function CollectionHeroCard({ collection, className, priorityImage = false }: CollectionHeroCardProps) {
   const gradient = getCollectionGradient(collection.id);
   const initials = getCollectionInitials(collection.name);
 
@@ -29,6 +30,7 @@ export function CollectionHeroCard({ collection, className }: CollectionHeroCard
     >
       <Link
         href={`/collections/${collection.id}`}
+        prefetch
         className="relative flex h-full w-full flex-col overflow-hidden rounded-[4cqw] border border-border/30 bg-card shadow-xl shadow-black/40 transition-all duration-200 active:scale-[0.99] lg:hover:-translate-y-0.5 lg:hover:border-primary/20"
       >
         <div className="absolute inset-0">
@@ -40,7 +42,7 @@ export function CollectionHeroCard({ collection, className }: CollectionHeroCard
               unoptimized
               className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
               sizes="(max-width: 767px) 85vw, (max-width: 1023px) 22vw, 16vw"
-              priority
+              priority={priorityImage}
             />
           ) : (
             <div className={cn("h-full w-full bg-gradient-to-br", gradient)}>
@@ -69,12 +71,12 @@ export function CollectionHeroCard({ collection, className }: CollectionHeroCard
               {collection.name}
             </h2>
             {collection.description && (
-            <p className="line-clamp-2 text-[4.3cqw] leading-relaxed text-white/60">
+            <p className="hidden line-clamp-2 text-[4.3cqw] leading-relaxed text-white/60 md:block">
               {collection.description}
             </p>
           )}
             {collection.topTags.length > 0 && (
-              <div className="flex flex-wrap gap-[1cqw]">
+              <div className="hidden flex-wrap gap-[1cqw] md:flex">
                 {collection.topTags.slice(0, 3).map((tag) => (
                   <span
                     key={tag}
@@ -114,8 +116,12 @@ export function CollectionRow({ collections }: { collections: CollectionCard[] }
         "lg:gap-[1.5vw] "
       )}
     >
-      {collections.map((collection) => (
-        <CollectionHeroCard key={collection.id} collection={collection} />
+      {collections.map((collection, index) => (
+        <CollectionHeroCard
+          key={collection.id}
+          collection={collection}
+          priorityImage={index === 0}
+        />
       ))}
     </div>
   );

@@ -25,7 +25,8 @@ export function InstallAppModal({ open, onOpenChange }: InstallAppModalProps) {
   const { isInstalled, showInstallOption, isIosInstall, isAndroidInstall, installing, promptAndroidInstall } =
     usePwaInstall();
 
-  if (isInstalled || !showInstallOption) return null;
+  if (isInstalled) return null;
+  if (!showInstallOption && !open) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

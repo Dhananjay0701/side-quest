@@ -11,7 +11,8 @@
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy --keep-vars",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "generate-pwa-assets": "node scripts/generate-pwa-icons.mjs"
+    "generate-pwa-assets": "node scripts/generate-pwa-icons.mjs",
+    "combine-city-data": "tsx scripts/combine-city-data.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -47,6 +48,7 @@
     "postcss": "^8.5.15",
     "sharp": "^0.34.3",
     "tailwindcss": "^4.3.1",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "wrangler": "^4.101.0"
   }

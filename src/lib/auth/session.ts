@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProfileInitials } from "@/lib/auth/profile-utils";
@@ -12,14 +13,14 @@ export class AuthError extends Error {
   }
 }
 
-export async function getAuthUser() {
+export const getAuthUser = cache(async () => {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return null;
   return data.user;
-}
+});
 
-export async function getAuthProfile(): Promise<Profile | null> {
+export const getAuthProfile = cache(async (): Promise<Profile | null> => {
   const user = await getAuthUser();
   if (!user) return null;
 
@@ -53,7 +54,7 @@ export async function getAuthProfile(): Promise<Profile | null> {
 
   if (error || !created) return null;
   return created as Profile;
-}
+});
 
 export async function requireAuthProfile(): Promise<Profile> {
   const profile = await getAuthProfile();

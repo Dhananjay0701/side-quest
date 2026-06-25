@@ -13,7 +13,10 @@ export function isStandalonePwa(): boolean {
 export function detectPwaPlatform(): PwaPlatform {
   if (typeof window === "undefined") return "unknown";
   const ua = window.navigator.userAgent;
-  if (/iPad|iPhone|iPod/.test(ua)) return "ios";
+  const isIosDevice =
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (isIosDevice) return "ios";
   if (/Android/.test(ua)) return "android";
   return "desktop";
 }

@@ -9,8 +9,10 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
   const profile = await getAuthProfile();
 
   try {
-    const collection = await getCollectionById(id, profile?.id ?? null);
-    const filters = await getCollectionFilters(id);
+    const [collection, filters] = await Promise.all([
+      getCollectionById(id, profile?.id ?? null),
+      getCollectionFilters(id),
+    ]);
     const isOwner = profile?.id === collection.user_id;
     //console.log(collection.cover_image_url);
     return (

@@ -11,6 +11,11 @@
 # testing
 /coverage
 
+#scraping
+/scraping
+# data
+/data
+/fixtures
 # next.js
 /.next/
 /out/
@@ -43,6 +48,12 @@ next-env.d.ts
 
 ## remove csv files
 /*.csv
+/scraping/output/
+/scraping/node_modules/
+/scraping/.atlas-browser-profile/
+/scraping/.atlas-browser-profile-*/
+/scraping/.atlas-session.json
+/scraping/.atlas-session-*.json
 # OpenNext
 .open-next
 

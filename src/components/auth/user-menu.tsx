@@ -7,6 +7,7 @@ import { LogOut, Upload, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UploadDialog } from "@/components/import/upload-dialog";
 import { InstallAppMenuItem } from "@/components/pwa/install-app-menu-item";
+import { InstallAppModal } from "@/components/pwa/install-app-modal";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import type { Profile } from "@/lib/db/types";
 
@@ -18,6 +19,7 @@ interface UserMenuProps {
 export function UserMenu({ profile, initials }: UserMenuProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [installModalOpen, setInstallModalOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
   async function handleSignOut() {
@@ -71,7 +73,12 @@ export function UserMenu({ profile, initials }: UserMenuProps) {
                   </button>
                 }
               />
-              <InstallAppMenuItem onSelect={() => setOpen(false)} />
+              <InstallAppMenuItem
+                onInstallClick={() => {
+                  setOpen(false);
+                  setInstallModalOpen(true);
+                }}
+              />
               <button
                 type="button"
                 disabled={signingOut}
@@ -85,6 +92,8 @@ export function UserMenu({ profile, initials }: UserMenuProps) {
           </div>
         </>
       )}
+
+      <InstallAppModal open={installModalOpen} onOpenChange={setInstallModalOpen} />
     </div>
   );
 }

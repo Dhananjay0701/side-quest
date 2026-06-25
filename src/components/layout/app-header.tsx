@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Compass, Upload } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { UserMenu } from "@/components/auth/user-menu";
@@ -16,7 +16,6 @@ interface AppHeaderProps {
 
 export function AppHeader({ profile }: AppHeaderProps) {
   const pathname = usePathname();
-  const router = useRouter();
 
   const initials = profile ? getProfileInitials(profile) : "RS";
 
@@ -78,9 +77,10 @@ export function AppHeader({ profile }: AppHeaderProps) {
             const active =
               tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
             return (
-              <button
+              <Link
                 key={tab.href}
-                onClick={() => router.push(tab.href)}
+                href={tab.href}
+                prefetch
                 className={cn(
                   "relative flex-1 py-2.5 text-center text-sm font-medium transition-colors",
                   active ? "text-foreground" : "text-muted/70"
@@ -90,7 +90,7 @@ export function AppHeader({ profile }: AppHeaderProps) {
                 {active && (
                   <span className="absolute inset-x-8 bottom-0 h-[2px] rounded-full bg-primary" />
                 )}
-              </button>
+              </Link>
             );
           })}
         </nav>
@@ -109,9 +109,10 @@ export function AppHeader({ profile }: AppHeaderProps) {
             const active =
               tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
             return (
-              <button
+              <Link
                 key={tab.href}
-                onClick={() => router.push(tab.href)}
+                href={tab.href}
+                prefetch
                 className={cn(
                   "relative px-4 py-1.5 text-sm font-medium transition-colors",
                   active ? "text-foreground" : "text-muted/70 hover:text-foreground/80"
@@ -121,7 +122,7 @@ export function AppHeader({ profile }: AppHeaderProps) {
                 {active && (
                   <span className="absolute inset-x-3 -bottom-[1px] h-[2px] rounded-full bg-primary" />
                 )}
-              </button>
+              </Link>
             );
           })}
         </nav>
