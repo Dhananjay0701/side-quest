@@ -18,9 +18,10 @@ function getPlaceAspectClass(id: string, hasImage: boolean): string {
 interface PlaceCardSmProps {
   place: PlaceCard;
   className?: string;
+  priorityImage?: boolean;
 }
 
-export function PlaceCardSm({ place, className }: PlaceCardSmProps) {
+export function PlaceCardSm({ place, className, priorityImage = false }: PlaceCardSmProps) {
   return (
     <Link
       href={`/places/${place.id}`}
@@ -40,6 +41,9 @@ export function PlaceCardSm({ place, className }: PlaceCardSmProps) {
             unoptimized
             className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
             sizes="(max-width: 767px) 148px, 168px"
+            priority={priorityImage}
+            loading={priorityImage ? "eager" : "lazy"}
+            fetchPriority={priorityImage ? "high" : "auto"}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-card to-border/20">
@@ -197,6 +201,7 @@ export function PlaceCardPinterestSkeleton() {
   );
 }
 
+// RecentlyAddedRow now passes index to PlaceCardSm so first 4 images can be loaded with priority on mobile
 export function RecentlyAddedRow({ places }: { places: PlaceCard[] }) {
   if (places.length === 0) return null;
 
@@ -212,8 +217,13 @@ export function RecentlyAddedRow({ places }: { places: PlaceCard[] }) {
         </button>
       </div>
       <div className="scrollbar-hide -mx-1 flex min-h-[200px] gap-3 overflow-x-auto px-1 pb-1 snap-x snap-mandatory md:min-h-0">
-        {places.map((place) => (
-          <PlaceCardSm key={place.id} place={place} />
+        {places.map((place, idx) => (
+          <PlaceCardSm
+            key={place.id}
+            place={place}
+            // On mobile, first 4 images have priority loading
+            priorityImage={idx < 3}
+          />
         ))}
       </div>
     </section>

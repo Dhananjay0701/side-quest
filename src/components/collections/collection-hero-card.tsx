@@ -43,6 +43,8 @@ export function CollectionHeroCard({ collection, className, priorityImage = fals
               className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
               sizes="(max-width: 767px) 85vw, (max-width: 1023px) 22vw, 16vw"
               priority={priorityImage}
+              loading={priorityImage ? "eager" : "lazy"}
+              fetchPriority={priorityImage ? "high" : "auto"}
             />
           ) : (
             <div className={cn("h-full w-full bg-gradient-to-br", gradient)}>
@@ -120,7 +122,7 @@ export function CollectionRow({ collections }: { collections: CollectionCard[] }
         <CollectionHeroCard
           key={collection.id}
           collection={collection}
-          priorityImage={index === 0}
+          priorityImage={index < 2}
         />
       ))}
     </div>
