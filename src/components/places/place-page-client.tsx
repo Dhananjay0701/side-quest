@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ExternalLink, Lightbulb, MapPin } from "lucide-react";
+import { AssetImage } from "@/components/images/asset-image";
 import { TagPill } from "@/components/places/tag-pill";
 import { PlaceEnrichTrigger } from "@/components/places/place-enrich-trigger";
 import { PlacePageSkeleton } from "@/components/places/place-page-skeleton";
@@ -50,13 +50,13 @@ export function PlacePageClient({ placeId }: { placeId: string }) {
         <div className="flex flex-col sm:flex-row">
           {coverUrl && (
             <div className="relative h-44 w-full shrink-0 sm:h-[11rem] sm:w-40 md:w-48">
-              <Image
+              <AssetImage
                 src={coverUrl}
                 alt={place.name}
-                fill
-                unoptimized
-                className="object-cover"
                 sizes="(max-width: 640px) 100vw, 192px"
+                priority
+                cacheTier="viewed"
+                cacheOnVisible={false}
               />
             </div>
           )}

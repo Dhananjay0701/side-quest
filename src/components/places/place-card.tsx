@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { ChevronRight, Heart, MapPin, Star } from "lucide-react";
+import { AssetImage } from "@/components/images/asset-image";
 import { TagPill } from "@/components/places/tag-pill";
+import { getAboveFoldLimits } from "@/lib/images/cache/policy";
 import { cn } from "@/lib/utils";
 import type { PlaceCard } from "@/lib/db/types";
+import { useEffect, useState } from "react";
 
 const PHOTO_ASPECTS = ["aspect-[3/4]", "aspect-[4/5]", "aspect-square", "aspect-[5/6]", "aspect-[2/3]"];
 
@@ -19,31 +21,34 @@ interface PlaceCardSmProps {
   place: PlaceCard;
   className?: string;
   priorityImage?: boolean;
+  cacheTier?: "homepage" | "none" | "viewed";
 }
 
-export function PlaceCardSm({ place, className, priorityImage = false }: PlaceCardSmProps) {
+export function PlaceCardSm({
+  place,
+  className,
+  priorityImage = false,
+  cacheTier = "none",
+}: PlaceCardSmProps) {
   return (
     <Link
       href={`/places/${place.id}`}
       className={cn(
         "group relative flex shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-border/30 bg-card/70 transition-colors active:bg-card/90 lg:hover:border-primary/25",
-        /* Mobile: ~200px tall · Desktop: compact */
         "h-[200px] w-[148px] md:h-[190px] md:w-[160px] lg:h-auto lg:w-[168px]",
         className
       )}
     >
       <div className="relative h-[100px] w-full shrink-0 overflow-hidden bg-card md:h-[90px]">
         {place.coverImageUrl ? (
-          <Image
+          <AssetImage
             src={place.coverImageUrl}
             alt={place.name}
-            fill
-            unoptimized
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+            className="transition-transform duration-300 group-hover:scale-[1.04]"
             sizes="(max-width: 767px) 148px, 168px"
             priority={priorityImage}
-            loading={priorityImage ? "eager" : "lazy"}
-            fetchPriority={priorityImage ? "high" : "auto"}
+            cacheTier={cacheTier}
+            cacheOnVisible={!priorityImage}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-card to-border/20">
@@ -137,13 +142,13 @@ export function PlaceCardPinterest({ place }: { place: PlaceCard }) {
     >
       <div className={cn("relative w-full overflow-hidden bg-card", aspect)}>
         {place.coverImageUrl ? (
-          <Image
+          <AssetImage
             src={place.coverImageUrl}
             alt={place.name}
-            fill
-            unoptimized
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            className="transition-transform duration-500 group-hover:scale-[1.04]"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            cacheTier="viewed"
+            cacheOnVisible
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-card via-border/10 to-card">
@@ -201,8 +206,27 @@ export function PlaceCardPinterestSkeleton() {
   );
 }
 
-// RecentlyAddedRow now passes index to PlaceCardSm so first 4 images can be loaded with priority on mobile
-export function RecentlyAddedRow({ places }: { places: PlaceCard[] }) {
+function useAboveFoldRecentLimit() {
+  const [limit, setLimit] = useState(() => getAboveFoldLimits().priorityRecentThumbnails);
+
+  useEffect(() => {
+    const update = () => setLimit(getAboveFoldLimits().priorityRecentThumbnails);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return limit;
+}
+
+export function RecentlyAddedRow({
+  places,
+  cacheTier = "homepage",
+}: {
+  places: PlaceCard[];
+  cacheTier?: "homepage" | "none";
+}) {
+  const aboveFoldLimit = useAboveFoldRecentLimit();
   if (places.length === 0) return null;
 
   return (
@@ -221,8 +245,8 @@ export function RecentlyAddedRow({ places }: { places: PlaceCard[] }) {
           <PlaceCardSm
             key={place.id}
             place={place}
-            // On mobile, first 4 images have priority loading
-            priorityImage={idx < 3}
+            priorityImage={idx < aboveFoldLimit}
+            cacheTier={cacheTier}
           />
         ))}
       </div>

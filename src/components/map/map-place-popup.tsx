@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { ExternalLink, MapPin, Star, X } from "lucide-react";
+import { AssetImage } from "@/components/images/asset-image";
 import { TagPill } from "@/components/places/tag-pill";
 import { getCategoryMarkerEmoji } from "@/lib/map/category-markers";
 import type { MapPlace } from "@/lib/map/types";
@@ -26,13 +26,12 @@ export function MapPlacePopup({ place, onClose, className }: MapPlacePopupProps)
     >
       <div className="relative h-36 w-full bg-card sm:h-40">
         {place.coverImageUrl ? (
-          <Image
+          <AssetImage
             src={place.coverImageUrl}
             alt={place.name}
-            fill
-            unoptimized
-            className="object-cover"
             sizes="(max-width: 640px) 100vw, 360px"
+            cacheTier="viewed"
+            cacheOnVisible={false}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-card to-border/30 text-4xl">

@@ -1,6 +1,15 @@
-/* Random Sidequest — minimal PWA service worker */
-const CACHE_NAME = "random-sidequest-v1";
-const PRECACHE_URLS = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];
+/* Random Sidequest — PWA service worker */
+importScripts("/sw-image-cache.js");
+
+const CACHE_NAME = "random-sidequest-v2";
+const PRECACHE_URLS = [
+  "/",
+  "/manifest.webmanifest",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/apple-touch-icon.png",
+  "/splash/apple-splash-1170-2532.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -16,7 +25,13 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))))
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((k) => k !== CACHE_NAME && !k.startsWith("rsq-images-v"))
+            .map((k) => caches.delete(k))
+        )
+      )
       .then(() => self.clients.claim())
   );
 });
@@ -25,6 +40,12 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
+
+  if (self.isImageRequest && self.isImageRequest(event.request)) {
+    self.handleImageFetch(event);
+    return;
+  }
+
   if (url.origin !== self.location.origin) return;
 
   if (event.request.mode === "navigate") {
@@ -41,7 +62,5 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
-  );
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });

@@ -6,6 +6,7 @@ import { ImagePlus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRef, useState } from "react";
 import { useQueryInvalidation } from "@/lib/query/hooks";
+import { imageCache } from "@/lib/images/cache";
 
 interface CoverUploadButtonProps {
   collectionId: string;
@@ -31,11 +32,14 @@ export function CoverUploadButton({ collectionId, className, compact }: CoverUpl
         method: "POST",
         body: formData,
       });
-      const json = await parseApiJson(res);
+      const json = await parseApiJson<{ coverImageUrl?: string }>(res);
 
       if (!res.ok) throw new Error(json.error?.message ?? "Upload failed");
 
       afterUpdateCollection(collectionId);
+      if (json.data?.coverImageUrl) {
+        void imageCache.refresh([json.data.coverImageUrl], "viewed");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {

@@ -43,7 +43,7 @@ export function ExplorePageClient() {
         </section>
       ) : (
         <div className="transition-all duration-300 ease-out">
-          <CollectionsSection collections={collections} title="Public Collections" />
+          <CollectionsSection collections={collections} title="Public Collections" cacheTier="none" />
         </div>
       )}
     </div>

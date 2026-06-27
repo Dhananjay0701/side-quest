@@ -38,7 +38,10 @@ async function uploadToR2(
 
   const put = async () => {
     await bucket.put(key, data, {
-      httpMetadata: { contentType },
+      httpMetadata: {
+        contentType,
+        cacheControl: "public, max-age=31536000, immutable",
+      },
     });
     return true;
   };

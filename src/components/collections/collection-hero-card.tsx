@@ -1,20 +1,28 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BookOpen, ChevronRight } from "lucide-react";
 import { CollectionCardMenu } from "@/components/collections/collection-card-menu";
+import { AssetImage } from "@/components/images/asset-image";
 import { getCollectionGradient, getCollectionInitials } from "@/lib/images/collage";
+import { getAboveFoldLimits } from "@/lib/images/cache/policy";
 import { cn } from "@/lib/utils";
 import type { CollectionCard } from "@/lib/db/types";
+import { useEffect, useState } from "react";
 
 interface CollectionHeroCardProps {
   collection: CollectionCard;
   className?: string;
   priorityImage?: boolean;
+  cacheTier?: "homepage" | "none" | "idle";
 }
 
-export function CollectionHeroCard({ collection, className, priorityImage = false }: CollectionHeroCardProps) {
+export function CollectionHeroCard({
+  collection,
+  className,
+  priorityImage = false,
+  cacheTier = "none",
+}: CollectionHeroCardProps) {
   const gradient = getCollectionGradient(collection.id);
   const initials = getCollectionInitials(collection.name);
 
@@ -23,8 +31,6 @@ export function CollectionHeroCard({ collection, className, priorityImage = fals
       className={cn(
         "@container group relative aspect-[4/5] w-[65vw] shrink-0 snap-start",
         "md:w-[clamp(12rem,20vw,20rem)] md:h-[clamp(12rem,10vw,26rem)] lg:w-[clamp(11rem,20vw,22rem)] lg:h-[clamp(11rem,28vw,30.5rem)]",
-        //"md:w-[clamp(0rem,10vw,100rem) md:h-[clamp(12rem,22vw,26rem)] lg:w-[clamp(11rem,22vw,17.5rem)], lg:h-[clamp(11rem,27vw,30.5rem)]",
-        
         className
       )}
     >
@@ -35,16 +41,14 @@ export function CollectionHeroCard({ collection, className, priorityImage = fals
       >
         <div className="absolute inset-0">
           {collection.coverImageUrl ? (
-            <Image
+            <AssetImage
               src={collection.coverImageUrl}
               alt={collection.name}
-              fill
-              unoptimized
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              className="transition-transform duration-500 group-hover:scale-[1.03]"
               sizes="(max-width: 767px) 85vw, (max-width: 1023px) 22vw, 16vw"
               priority={priorityImage}
-              loading={priorityImage ? "eager" : "lazy"}
-              fetchPriority={priorityImage ? "high" : "auto"}
+              cacheTier={cacheTier}
+              cacheOnVisible={!priorityImage}
             />
           ) : (
             <div className={cn("h-full w-full bg-gradient-to-br", gradient)}>
@@ -58,25 +62,22 @@ export function CollectionHeroCard({ collection, className, priorityImage = fals
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
         </div>
 
-        {/* Place count badge */}
         <div className="relative p-[4cqw]">
           <span className="inline-block rounded-full bg-black/50 px-[2.5cqw] py-[0.8cqw] text-[3cqw] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
             {collection.placeCount} places
           </span>
         </div>
 
-        {/* Bottom content — all sizing via cqw (relative to card width) */}
         <div className="relative mt-auto flex flex-col gap-[2cqw] p-[4cqw]">
-          {/* Title + tags share the same left edge */}
           <div className="flex flex-col gap-[1.5cqw]">
             <h2 className="line-clamp-2 text-[6.5cqw] font-semibold leading-snug tracking-tight text-white">
               {collection.name}
             </h2>
             {collection.description && (
-            <p className="hidden line-clamp-2 text-[4.3cqw] leading-relaxed text-white/60 md:block">
-              {collection.description}
-            </p>
-          )}
+              <p className="hidden line-clamp-2 text-[4.3cqw] leading-relaxed text-white/60 md:block">
+                {collection.description}
+              </p>
+            )}
             {collection.topTags.length > 0 && (
               <div className="hidden flex-wrap gap-[1cqw] md:flex">
                 {collection.topTags.slice(0, 3).map((tag) => (
@@ -106,7 +107,27 @@ export function CollectionHeroCard({ collection, className, priorityImage = fals
   );
 }
 
-export function CollectionRow({ collections }: { collections: CollectionCard[] }) {
+function useAboveFoldCollectionLimit() {
+  const [limit, setLimit] = useState(() => getAboveFoldLimits().collectionCovers);
+
+  useEffect(() => {
+    const update = () => setLimit(getAboveFoldLimits().collectionCovers);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return limit;
+}
+
+export function CollectionRow({
+  collections,
+  cacheTier = "none",
+}: {
+  collections: CollectionCard[];
+  cacheTier?: "homepage" | "none" | "idle";
+}) {
+  const aboveFoldLimit = useAboveFoldCollectionLimit();
   if (collections.length === 0) return null;
 
   return (
@@ -122,7 +143,8 @@ export function CollectionRow({ collections }: { collections: CollectionCard[] }
         <CollectionHeroCard
           key={collection.id}
           collection={collection}
-          priorityImage={index < 2}
+          priorityImage={index < aboveFoldLimit}
+          cacheTier={cacheTier}
         />
       ))}
     </div>
@@ -132,9 +154,11 @@ export function CollectionRow({ collections }: { collections: CollectionCard[] }
 export function CollectionsSection({
   collections,
   title = "Your Collections",
+  cacheTier = "none",
 }: {
   collections: CollectionCard[];
   title?: string;
+  cacheTier?: "homepage" | "none" | "idle";
 }) {
   if (collections.length === 0) return null;
 
@@ -151,7 +175,7 @@ export function CollectionsSection({
           View all <ChevronRight className="h-[1.2em] w-[1.2em]" />
         </button>
       </div>
-      <CollectionRow collections={collections} />
+      <CollectionRow collections={collections} cacheTier={cacheTier} />
     </section>
   );
 }

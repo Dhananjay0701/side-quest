@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { AssetImage } from "@/components/images/asset-image";
 import { CollectionFilters } from "@/components/collections/collection-filters";
 import { CollectionViewToggle } from "@/components/collections/collection-view-toggle";
 import { CoverUploadButton } from "@/components/collections/cover-upload-button";
@@ -13,6 +13,7 @@ import {
 } from "@/components/places/place-card";
 import { formatPlaceCount } from "@/lib/utils";
 import { getCollectionGradient } from "@/lib/images/collage";
+import { imageCache } from "@/lib/images/cache";
 import { parseApiJson } from "@/lib/api/response";
 import type { CollectionViewMode } from "@/lib/map/types";
 import type { PlaceCard } from "@/lib/db/types";
@@ -63,6 +64,10 @@ export function CollectionDetailClient({
 
   const mapSectionRef = useRef<HTMLDivElement>(null);
   const gradient = getCollectionGradient(collectionId);
+
+  useEffect(() => {
+    imageCache.registerCollectionCover(coverImageUrl);
+  }, [coverImageUrl]);
 
   const fetchPlaces = useCallback(async () => {
     setLoading(true);
@@ -115,14 +120,13 @@ export function CollectionDetailClient({
       <div className="relative mb-[3vw] min-h-[12rem] overflow-hidden rounded-2xl border border-border/40 md:mb-6 md:min-h-[14rem]">
         <div className="absolute inset-0">
           {coverImageUrl ? (
-            <Image
+            <AssetImage
               src={coverImageUrl}
               alt={name}
-              fill
-              unoptimized
-              className="object-cover"
-              sizes="100vw"
+              sizes="(max-width: 768px) 100vw, 1200px"
               priority
+              cacheTier="viewed"
+              cacheOnVisible={false}
             />
           ) : (
             <div className={`h-full w-full bg-gradient-to-br ${gradient}`} />

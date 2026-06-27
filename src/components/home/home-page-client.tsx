@@ -14,6 +14,7 @@ import {
   useProfileQuery,
   useRecentPlacesQuery,
 } from "@/lib/query/hooks";
+import { useHomepageImagePreload } from "@/lib/images/cache";
 import { cn } from "@/lib/utils";
 
 export function HomePageClient() {
@@ -39,6 +40,8 @@ export function HomePageClient() {
     collectionsQuery.error?.message ??
     recentQuery.error?.message ??
     null;
+
+  useHomepageImagePreload(collections, recent, isAuthenticated && !isFirstLoad);
 
   if (isFirstLoad) {
     return <HomePageSkeleton />;
@@ -76,14 +79,14 @@ export function HomePageClient() {
       {profile && <MobileUploadBar />}
 
       <div className="transition-all duration-300 ease-out">
-        <CollectionsSection collections={collections} />
+        <CollectionsSection collections={collections} cacheTier="homepage" />
       </div>
 
       {hasCollections && <DiscoverSection className="hidden md:block" />}
 
       {hasCollections && (
         <div className="transition-all duration-300 ease-out">
-          <RecentlyAddedRow places={recent} />
+          <RecentlyAddedRow places={recent} cacheTier="homepage" />
         </div>
       )}
     </div>
