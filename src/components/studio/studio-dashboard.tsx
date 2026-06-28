@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Eye, History, ImageIcon, Sparkles } from "lucide-react";
+import { ArrowRight, BarChart3, Eye, History, ImageIcon, Sparkles } from "lucide-react";
 import type { ProfileRole } from "@/lib/auth/roles-edge";
 import { isAdminRole } from "@/lib/auth/roles-edge";
 import { Button } from "@/components/ui/button";
@@ -77,6 +77,21 @@ export function StudioDashboard({ role }: StudioDashboardProps) {
           </p>
           <span className="mt-4 inline-flex items-center text-sm text-primary">
             Manage covers <ArrowRight className="ml-1 h-4 w-4" />
+          </span>
+        </Link>
+
+        <Link
+          href="/studio/search"
+          className="group rounded-2xl border border-border/15 bg-card/30 p-6 transition-colors hover:border-primary/30 hover:bg-card/50"
+        >
+          <BarChart3 className="mb-4 h-5 w-5 text-primary" />
+          <h3 className="text-lg font-semibold">Search usage</h3>
+          <p className="mt-2 text-sm text-muted/50">
+            API call counts for Google Autocomplete, Place Details, Photos, and Gemini — autocomplete, enrichment, and cost
+            estimates.
+          </p>
+          <span className="mt-4 inline-flex items-center text-sm text-primary">
+            View stats <ArrowRight className="ml-1 h-4 w-4" />
           </span>
         </Link>
       </div>

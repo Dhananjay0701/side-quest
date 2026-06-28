@@ -11,6 +11,8 @@ export const queryKeys = {
   collection: (collectionId: string) => ["collection", collectionId] as const,
   place: (placeId: string) => ["place", placeId] as const,
   search: (q: string) => ["search", { q }] as const,
+  searchSuggest: (q: string, sessionToken: string) =>
+    ["searchSuggest", { q, sessionToken }] as const,
   recommendations: ["recommendations"] as const,
   friends: ["friends"] as const,
   stats: ["stats"] as const,

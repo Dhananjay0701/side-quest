@@ -1,4 +1,9 @@
-import { HeadBucketCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  HeadBucketCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 
 const DEFAULT_BUCKET = "random-sidequest-assets";
 
@@ -111,6 +116,28 @@ export async function probeR2S3(): Promise<R2S3ProbeResult> {
       error: formatted.message,
       errorCode: formatted.code ?? "HEAD_BUCKET_FAILED",
     };
+  }
+}
+
+/** List object keys under a prefix — works in local dev without ASSETS_BUCKET binding. */
+export async function listR2KeysViaS3(prefix: string, limit = 100): Promise<string[]> {
+  const client = getR2S3Client();
+  if (!client) return [];
+
+  const { bucket } = getR2Env();
+  try {
+    const res = await client.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: prefix,
+        MaxKeys: limit,
+      })
+    );
+    return (res.Contents ?? [])
+      .map((o) => o.Key)
+      .filter((k): k is string => typeof k === "string" && /\.(jpe?g|png|webp)$/i.test(k));
+  } catch {
+    return [];
   }
 }
 

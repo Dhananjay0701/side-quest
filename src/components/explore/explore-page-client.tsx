@@ -10,7 +10,7 @@ import { ExploreDesktopFeaturedCollections } from "@/components/explore/explore-
 import { ExploreHero } from "@/components/explore/explore-hero";
 import { explorePageX } from "@/components/explore/explore-layout";
 import { ExplorePageSkeleton } from "@/components/explore/explore-page-skeleton";
-import { ExploreSearch } from "@/components/explore/explore-search";
+import { HeroSearchAutocomplete } from "@/components/search/hero-search-autocomplete";
 import { useExplorePageQuery } from "@/lib/query/hooks";
 import { useExploreImagePreload } from "@/lib/explore/use-explore-image-preload";
 import { cn } from "@/lib/utils";
@@ -64,7 +64,11 @@ export function ExplorePageClient({ initialData, previewMode = false }: ExploreP
           explorePageX
         )}
       >
-        <ExploreSearch className="mb-2 pt-2.5" />
+        <HeroSearchAutocomplete
+          className="mb-2 pt-2.5"
+          variant="compact"
+          placeholder="Search cities, places or experiences…"
+        />
         <ExploreFilters
           filters={page.filters}
           activeId={activeFilter}

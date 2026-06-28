@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, History, ImageIcon, LayoutDashboard, Sparkles } from "lucide-react";
+import { BarChart3, Compass, History, ImageIcon, LayoutDashboard, Sparkles } from "lucide-react";
 import type { ProfileRole } from "@/lib/auth/roles-edge";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ const NAV = [
   { href: "/studio/explore", label: "Explore", icon: Sparkles },
   { href: "/studio/explore/hero", label: "Hero", icon: Compass },
   { href: "/studio/collections", label: "Covers", icon: ImageIcon },
+  { href: "/studio/search", label: "Search", icon: BarChart3 },
   { href: "/studio/history", label: "History", icon: History },
 ] as const;
 

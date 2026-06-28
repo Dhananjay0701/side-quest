@@ -30,7 +30,7 @@ export const GET = profileApiRoute(
         address: place.address,
         rating: place.rating,
         coverImageUrl: resolveAssetUrl(place.cover_image_url),
-        googleMapsUrl: place.google_maps_url,
+        googleMapsUrl: place.google_maps_url ?? "",
         category: category ? { slug: category.slug, name: category.name } : null,
         tags: tagRows
           .map((t) => unwrapRelation<{ slug: string; name: string }>(t.tags))

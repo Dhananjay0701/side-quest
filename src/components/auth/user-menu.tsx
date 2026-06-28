@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Upload, User } from "lucide-react";
+import { LogOut, Plus, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UploadDialog } from "@/components/import/upload-dialog";
+import { CreateCollectionDialog } from "@/components/import/create-collection-dialog";
 import { InstallAppMenuItem } from "@/components/pwa/install-app-menu-item";
 import { InstallAppModal } from "@/components/pwa/install-app-modal";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
@@ -63,15 +63,15 @@ export function UserMenu({ profile, initials }: UserMenuProps) {
                 <User className="h-4 w-4" />
                 My collections
               </Link>
-              <UploadDialog
+              <CreateCollectionDialog
                 trigger={
                   <button
                     type="button"
                     onClick={() => setOpen(false)}
                     className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-muted hover:bg-card/80 hover:text-foreground"
                   >
-                    <Upload className="h-4 w-4" />
-                    Upload CSV
+                    <Plus className="h-4 w-4" />
+                    New collection
                   </button>
                 }
               />

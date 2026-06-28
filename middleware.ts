@@ -3,6 +3,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { canAccessStudio, fetchProfileRoleByAuthUserId } from "@/lib/auth/roles-edge";
 
 const PROTECTED_API_PREFIXES = ["/api/import", "/api/collections/", "/api/studio/"];
+const PROTECTED_API_EXACT: { method: string; path: string }[] = [
+  { method: "POST", path: "/api/places" },
+  { method: "POST", path: "/api/collections" },
+];
 const PROTECTED_PAGE_PREFIXES = ["/studio"];
 const AUTH_USER_ID_HEADER = "x-auth-user-id";
 const AUTH_USER_ID_COOKIE = "rsq-auth-uid";
@@ -60,8 +64,11 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isProtectedApi =
-    request.method !== "GET" &&
-    PROTECTED_API_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+    (request.method !== "GET" &&
+      PROTECTED_API_PREFIXES.some((prefix) => pathname.startsWith(prefix))) ||
+    PROTECTED_API_EXACT.some(
+      (route) => route.method === request.method && pathname === route.path
+    );
 
   const isProtectedStudioApi = pathname.startsWith("/api/studio/");
   const isProtectedStudioPage = PROTECTED_PAGE_PREFIXES.some((prefix) =>

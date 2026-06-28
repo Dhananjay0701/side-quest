@@ -23,7 +23,7 @@ export async function globalSearch(
     .from("collections")
     .select("id, name, description, place_count, cover_image_url, is_public, user_id, profiles(display_name, avatar_url, username)")
     .eq("is_deleted", false)
-    .or(`name.ilike.%${trimmed}%,description.ilike.%${trimmed}%`)
+    .textSearch("search_vector", trimmed, { type: "websearch", config: "english" })
     .limit(24);
 
   const collectionResults: CollectionCard[] = [];
@@ -75,7 +75,7 @@ export async function globalSearch(
       rating: row.rating,
       coverImageUrl: resolveAssetUrl(row.cover_image_url),
       shortDescription: desc?.short_text ?? null,
-      googleMapsUrl: row.google_maps_url,
+      googleMapsUrl: row.google_maps_url ?? null,
       likelyAudience: row.likely_audience,
       likelyVibe: row.likely_vibe,
       collectionName: unwrapRelation<{ name: string }>(collRows?.[0]?.collections)?.name,

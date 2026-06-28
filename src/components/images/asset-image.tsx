@@ -9,6 +9,7 @@ import {
   recordImageLoad,
   recordImageNetworkRequest,
 } from "@/lib/images/cache/observability";
+import { resolveAssetUrl } from "@/lib/images/assets";
 import { cn } from "@/lib/utils";
 
 export interface AssetImageProps {
@@ -39,40 +40,41 @@ function AssetImageInner({
   cacheOnVisible = true,
   placeholderClassName,
 }: AssetImageProps) {
+  const resolvedSrc = resolveAssetUrl(src) ?? src;
   const containerRef = useRef<HTMLDivElement>(null);
-  const [loaded, setLoaded] = useState(() => imageCache.isMemoryWarm(src));
+  const [loaded, setLoaded] = useState(() => imageCache.isMemoryWarm(resolvedSrc));
   const registeredRef = useRef(false);
 
   useEffect(() => {
-    setLoaded(imageCache.isMemoryWarm(src));
+    setLoaded(imageCache.isMemoryWarm(resolvedSrc));
     registeredRef.current = false;
-  }, [src]);
+  }, [resolvedSrc]);
 
   // Preload may finish after mount; cached images may not fire onLoad.
   useEffect(() => {
     if (loaded) return;
-    if (imageCache.isMemoryWarm(src)) {
+    if (imageCache.isMemoryWarm(resolvedSrc)) {
       setLoaded(true);
       return;
     }
 
     const timers = [32, 100, 250, 600, 1200].map((ms) =>
       window.setTimeout(() => {
-        if (imageCache.isMemoryWarm(src)) setLoaded(true);
+        if (imageCache.isMemoryWarm(resolvedSrc)) setLoaded(true);
       }, ms)
     );
 
     return () => timers.forEach((id) => clearTimeout(id));
-  }, [src, loaded]);
+  }, [resolvedSrc, loaded]);
 
   useEffect(() => {
     if (cacheTier === "homepage" || cacheTier === "static" || cacheTier === "idle") {
-      imageCache.registerViewed(src);
+      imageCache.registerViewed(resolvedSrc);
     }
     if (cacheTier === "viewed" && !cacheOnVisible) {
-      imageCache.registerViewed(src);
+      imageCache.registerViewed(resolvedSrc);
     }
-  }, [src, cacheTier, cacheOnVisible]);
+  }, [resolvedSrc, cacheTier, cacheOnVisible]);
 
   useEffect(() => {
     if (!cacheOnVisible || cacheTier === "none" || registeredRef.current) return;
@@ -83,7 +85,7 @@ function AssetImageInner({
       ([entry]) => {
         if (!entry?.isIntersecting || registeredRef.current) return;
         registeredRef.current = true;
-        imageCache.registerViewed(src);
+        imageCache.registerViewed(resolvedSrc);
         observer.disconnect();
       },
       { rootMargin: "80px", threshold: 0.01 }
@@ -91,7 +93,7 @@ function AssetImageInner({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [src, cacheOnVisible, cacheTier]);
+  }, [resolvedSrc, cacheOnVisible, cacheTier]);
 
   const loadStartRef = useRef(0);
 
@@ -103,11 +105,11 @@ function AssetImageInner({
         : 0;
 
       const markLoaded = (decodeMs: number) => {
-        recordImageLoad({ url: src, loadMs, decodeMs });
+        recordImageLoad({ url: resolvedSrc, loadMs, decodeMs });
         setLoaded(true);
       };
 
-      if (imageCache.isMemoryWarm(src)) {
+      if (imageCache.isMemoryWarm(resolvedSrc)) {
         recordImageCacheHit("memory");
       }
 
@@ -121,15 +123,15 @@ function AssetImageInner({
         markLoaded(0);
       }
     },
-    [src]
+    [resolvedSrc]
   );
 
   const handleLoadStart = useCallback(() => {
     loadStartRef.current = performance.now();
-    if (!imageCache.isMemoryWarm(src)) {
+    if (!imageCache.isMemoryWarm(resolvedSrc)) {
       recordImageNetworkRequest();
     }
-  }, [src]);
+  }, [resolvedSrc]);
 
   const imageClassName = cn(
     "object-cover transition-opacity duration-300 ease-out",
@@ -157,7 +159,7 @@ function AssetImageInner({
       )}
 
       <Image
-        src={src}
+        src={resolvedSrc}
         alt={alt}
         fill={fill}
         width={fill ? undefined : width}

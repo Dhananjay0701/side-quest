@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   getAppBaseUrl,
   getAssetsBaseUrl,
+  isLocalDevAppUrl,
   legacyPathToKey,
   resolveAssetUrl,
 } from "@/lib/images/assets";
@@ -9,8 +10,12 @@ import {
 export type ResolutionMode = "r2-public-url" | "worker-cdn-proxy" | "local-filesystem";
 
 export function getResolutionMode(): ResolutionMode {
-  if (getAssetsBaseUrl()) return "r2-public-url";
+  if (isLocalDevAppUrl()) {
+    if (getAssetsBaseUrl()) return "r2-public-url";
+    return "local-filesystem";
+  }
   if (getAppBaseUrl()) return "worker-cdn-proxy";
+  if (getAssetsBaseUrl()) return "r2-public-url";
   return "local-filesystem";
 }
 
@@ -38,10 +43,10 @@ export function describeAssetResolution(stored: string | null | undefined) {
       ? ["External URL — used as-is"]
       : [
           `DB value → R2 key: ${r2Key}`,
-          assetsBase
-            ? `Public R2/CDN: ${assetsBase}/${r2Key}`
-            : appBase
-              ? `Worker proxy: ${appBase}/cdn/${r2Key}`
+          appBase
+            ? `Worker proxy: ${appBase}/cdn/${r2Key}`
+            : assetsBase
+              ? `Public R2/CDN: ${assetsBase}/${r2Key}`
               : `Local dev: /images_to_use/${r2Key}`,
         ],
   };
@@ -169,10 +174,10 @@ export function getAssetEnvConfig() {
     NEXT_PUBLIC_APP_URL: appBase || null,
     resolutionMode: getResolutionMode(),
     notes: [
-      assetsBase
-        ? "Images load directly from NEXT_PUBLIC_ASSETS_BASE_URL — must match R2 public/custom domain."
-        : appBase
-          ? `Images load via ${appBase}/cdn/{key} — Worker reads ASSETS_BUCKET binding.`
+      appBase
+        ? `R2 keys load via ${appBase}/cdn/{key} — Worker reads ASSETS_BUCKET binding (preferred).`
+        : assetsBase
+          ? "Images load directly from NEXT_PUBLIC_ASSETS_BASE_URL — must match R2 public/custom domain."
           : "No public URL set — local dev uses /images_to_use/{key}.",
       "ASSETS (static binding) is NOT your R2 bucket — it serves OpenNext JS/CSS only.",
       "ASSETS_BUCKET is the R2 binding for images (bucket: random-sidequest-assets).",

@@ -28,7 +28,7 @@ export function HeroSection({ showOnboarding, onboardingSlot }: HeroSectionProps
         </p>
 
         {/* Mobile: full width 48px · Desktop: max 480px */}
-        <div className="mt-3 w-full md:mt-5 lg:max-w-[580px]">
+        <div className="relative z-30 mt-3 w-full md:mt-5 lg:max-w-[580px]">
           <HeroSearch />
         </div>
 

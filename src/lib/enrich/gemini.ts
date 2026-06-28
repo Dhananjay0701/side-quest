@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { profileAI } from "@/lib/debug/profiler";
 import { recordAiMetric } from "@/lib/debug/metrics";
+import { recordSearchUsage } from "@/lib/search/usage";
 
 export const GEMINI_MODEL = "gemini-3.1-flash-lite";
 
@@ -28,6 +29,8 @@ export async function generateGeminiJson(systemPrompt: string, userPrompt: strin
     const result = await model.generateContent(userPrompt);
     const text = result.response.text();
     if (!text) throw new Error("Empty Gemini response");
+
+    recordSearchUsage("gemini", "enrichment");
 
     recordAiMetric({
       model: GEMINI_MODEL,

@@ -4,6 +4,7 @@ import {
   fetchFirstPlacePhotoBytes,
   isGooglePlacesConfigured,
   resolvePlaceForPhotos,
+  type GooglePlaceLookupResult,
 } from "@/lib/places/google-places";
 
 const IMPORT_PHOTO_LIMIT = 10;
@@ -50,7 +51,11 @@ async function runPool<T, R>(
   return results;
 }
 
-export async function enrichPlacePhoto(placeId: string, collectionName?: string | null) {
+export async function enrichPlacePhoto(
+  placeId: string,
+  collectionName?: string | null,
+  preFetchedLookup?: GooglePlaceLookupResult | null
+) {
   if (!isGooglePlacesConfigured()) {
     return { success: false as const, reason: "no_api_key" as const };
   }
@@ -76,19 +81,22 @@ export async function enrichPlacePhoto(placeId: string, collectionName?: string 
   }
 
   try {
-    const lookup = await resolvePlaceForPhotos({
-      name: place.name,
-      googleMapsUrl: place.google_maps_url,
-      importNotes: place.import_notes,
-      collectionName,
-      placesApiId: getPlacesApiId(metadata),
-    });
+    const lookup =
+      preFetchedLookup ??
+      (await resolvePlaceForPhotos({
+        name: place.name,
+        googleMapsUrl: place.google_maps_url,
+        importNotes: place.import_notes,
+        collectionName,
+        placesApiId: getPlacesApiId(metadata) ?? undefined,
+      }));
 
     const firstPhoto = lookup?.photos?.[0];
     if (!lookup || !firstPhoto?.name) {
       await supabase
         .from("places")
         .update({
+          photo_status: "failed",
           metadata: {
             ...metadata,
             ...(lookup?.placesApiId ? { placesApiId: lookup.placesApiId } : {}),
@@ -107,6 +115,7 @@ export async function enrichPlacePhoto(placeId: string, collectionName?: string 
     const attribution = firstPhoto.authorAttributions?.[0]?.displayName ?? null;
     const updates: Record<string, unknown> = {
       cover_image_url: coverUrl,
+      photo_status: "ready",
       metadata: {
         ...metadata,
         placesApiId: lookup.placesApiId,
@@ -130,6 +139,7 @@ export async function enrichPlacePhoto(placeId: string, collectionName?: string 
     await supabase
       .from("places")
       .update({
+        photo_status: "failed",
         metadata: {
           ...metadata,
           photoFetchFailed: true,
@@ -147,7 +157,11 @@ export async function enrichPlacePhoto(placeId: string, collectionName?: string 
   }
 }
 
-export async function enrichPlacePhotoIfNeeded(placeId: string, collectionName?: string | null) {
+export async function enrichPlacePhotoIfNeeded(
+  placeId: string,
+  collectionName?: string | null,
+  preFetchedLookup?: GooglePlaceLookupResult | null
+) {
   const supabase = createAdminClient();
   const { data: place } = await supabase
     .from("places")
@@ -159,7 +173,7 @@ export async function enrichPlacePhotoIfNeeded(placeId: string, collectionName?:
     return { skipped: true as const };
   }
 
-  return enrichPlacePhoto(placeId, collectionName);
+  return enrichPlacePhoto(placeId, collectionName, preFetchedLookup);
 }
 
 export async function enrichCollectionPlacePhotos(

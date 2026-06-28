@@ -412,3 +412,47 @@ export function mapSearchCollectionRow(
 ): CollectionCard {
   return buildCollectionCard(c, topTags);
 }
+
+export interface CreateCollectionInput {
+  name: string;
+  description?: string | null;
+  tags?: string[];
+  coverImageUrl?: string | null;
+  coverSource?: string;
+  isPublic?: boolean;
+}
+
+export async function createCollection(
+  userId: string,
+  input: CreateCollectionInput
+): Promise<{ id: string; name: string; coverImageUrl: string | null }> {
+  return profileDb("Create Collection", async () => {
+    const supabase = createAdminClient();
+    const tags = (input.tags ?? []).map((t) => t.trim()).filter(Boolean).slice(0, 12);
+
+    const { data, error } = await supabase
+      .from("collections")
+      .insert({
+        user_id: userId,
+        name: input.name.trim(),
+        description: input.description?.trim() || null,
+        cover_image_url: input.coverImageUrl ?? null,
+        cover_source: input.coverSource ?? (input.coverImageUrl ? "upload" : "collage"),
+        is_public: input.isPublic ?? false,
+        source: "manual",
+        metadata: tags.length > 0 ? { tags } : {},
+      })
+      .select("id, name, cover_image_url")
+      .single();
+
+    if (error || !data) {
+      throw new Error(error?.message ?? "Failed to create collection");
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      coverImageUrl: resolveAssetUrl(data.cover_image_url),
+    };
+  });
+}

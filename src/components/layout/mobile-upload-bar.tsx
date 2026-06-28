@@ -1,16 +1,16 @@
 "use client";
 
-import { Upload } from "lucide-react";
-import { UploadDialog } from "@/components/import/upload-dialog";
+import { Plus } from "lucide-react";
+import { CreateCollectionDialog } from "@/components/import/create-collection-dialog";
 
 export function MobileUploadBar() {
   return (
     <div className="px-4 pb-3 lg:hidden">
-      <UploadDialog
+      <CreateCollectionDialog
         trigger={
           <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-border/50 bg-card/60 py-2.5 text-sm font-medium text-muted transition-colors active:bg-card">
-            <Upload className="h-4 w-4" />
-            Upload Google Maps Export
+            <Plus className="h-4 w-4" />
+            New collection
           </button>
         }
       />

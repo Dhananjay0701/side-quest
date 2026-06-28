@@ -6,7 +6,6 @@ import { DiscoverSection } from "@/components/home/discover-section";
 import { HeroSection } from "@/components/home/hero-section";
 import { HomePageSkeleton } from "@/components/home/home-page-skeleton";
 import { OnboardingEmpty } from "@/components/home/onboarding-empty";
-import { MobileUploadBar } from "@/components/layout/mobile-upload-bar";
 import { RecentlyAddedRow } from "@/components/places/place-card";
 import {
   clientProfileToProfile,
@@ -75,8 +74,6 @@ export function HomePageClient() {
         showOnboarding={profile ? !hasCollections : false}
         onboardingSlot={profile && !hasCollections ? <OnboardingEmpty /> : undefined}
       />
-
-      {profile && <MobileUploadBar />}
 
       <div className="transition-all duration-300 ease-out">
         <CollectionsSection collections={collections} cacheTier="homepage" />

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient, useMutation, type UseQueryResult } from "@tanstack/react-query";
 import type { ExplorePageDTO } from "@/lib/cms/types";
 import type { Profile } from "@/lib/db/types";
 import {
@@ -19,6 +19,9 @@ import {
   fetchProfile,
   fetchRecentPlaces,
   fetchSearchResults,
+  fetchSearchSuggest,
+  createPlace,
+  createCollection,
   type ClientProfile,
 } from "@/lib/query/fetchers";
 import {
@@ -202,6 +205,75 @@ export function useSearchQuery(q: string) {
 
   useCacheTelemetry(query, "Search");
   return query;
+}
+
+const SUGGEST_STALE_MS = 30_000;
+
+export function useSearchSuggest(
+  q: string,
+  options: {
+    sessionToken: string;
+    lat?: number;
+    lng?: number;
+    enabled?: boolean;
+    hero?: boolean;
+  }
+) {
+  const [debouncedQ, setDebouncedQ] = useState(q);
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQ(q), 250);
+    return () => clearTimeout(timer);
+  }, [q]);
+
+  const trimmed = debouncedQ.trim();
+  const enabled = (options.enabled ?? true) && trimmed.length > 0 && Boolean(options.sessionToken);
+
+  return useQuery({
+    queryKey: queryKeys.searchSuggest(trimmed, options.sessionToken),
+    queryFn: async () => {
+      abortRef.current?.abort();
+      abortRef.current = new AbortController();
+      return fetchSearchSuggest(
+        {
+          q: trimmed,
+          sessionToken: options.sessionToken,
+          lat: options.lat,
+          lng: options.lng,
+          hero: options.hero,
+        },
+        abortRef.current.signal
+      );
+    },
+    enabled,
+    staleTime: SUGGEST_STALE_MS,
+    gcTime: QUERY_GC_TIME_MS,
+    retry: 1,
+    meta: { label: "Search Suggest" },
+  });
+}
+
+export function useAddPlaceMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createPlace,
+    onSuccess: (_data, variables) => {
+      invalidateAfterAddPlace(queryClient, variables.collectionId);
+    },
+  });
+}
+
+export function useCreateCollectionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createCollection,
+    onSuccess: () => {
+      invalidateAfterCreateCollection(queryClient);
+    },
+  });
 }
 
 export function useQueryInvalidation() {

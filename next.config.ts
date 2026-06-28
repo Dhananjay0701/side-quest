@@ -6,6 +6,8 @@ function assetRemotePatterns(): NonNullable<NextConfig["images"]>["remotePattern
     { protocol: "https", hostname: "**.supabase.co" },
     { protocol: "https", hostname: "images.unsplash.com" },
     { protocol: "https", hostname: "lh3.googleusercontent.com" },
+    { protocol: "https", hostname: "**.r2.dev", pathname: "/**" },
+    { protocol: "https", hostname: "**.workers.dev", pathname: "/cdn/**" },
   ];
 
   const assetsBase = process.env.NEXT_PUBLIC_ASSETS_BASE_URL;

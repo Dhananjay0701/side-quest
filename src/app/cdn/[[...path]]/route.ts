@@ -1,10 +1,10 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { resolveAssetUrl } from "@/lib/images/assets";
+import { R2_ASSET_PREFIXES, resolveAssetUrl } from "@/lib/images/assets";
 import { profileR2 } from "@/lib/debug/profiler";
 import { isProfilingEnabled } from "@/lib/debug/enabled";
 import { recordR2Transfer } from "@/lib/debug/metrics";
 
-const ALLOWED_PREFIXES = ["collections/", "places/", "avatars/"];
+const ALLOWED_PREFIXES: readonly string[] = R2_ASSET_PREFIXES;
 
 function jsonDebug(body: Record<string, unknown>, status: number) {
   return Response.json(body, {
@@ -28,7 +28,7 @@ export async function GET(
         ? jsonDebug(
             {
               error: "invalid_key",
-              message: "Key must start with collections/, places/, or avatars/",
+              message: `Key must start with one of: ${ALLOWED_PREFIXES.join(", ")}`,
               received: key || null,
               example: "/cdn/collections/bir.png",
             },

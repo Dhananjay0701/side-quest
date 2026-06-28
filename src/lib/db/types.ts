@@ -33,15 +33,27 @@ export interface Collection {
   cover_source: string;
   place_count: number;
   is_public: boolean;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
+
+export type PlaceTier = "light" | "full";
+export type PlaceSource = "import" | "osm" | "google" | "manual";
 
 export interface Place {
   id: string;
   user_id: string | null;
   google_place_id: string | null;
-  google_maps_url: string;
+  google_maps_url: string | null;
+  osm_id: string | null;
+  places_api_id: string | null;
+  place_source: PlaceSource;
+  place_tier: PlaceTier;
+  save_count: number;
+  popularity_score: number;
+  photo_status: string;
+  enriched_at: string | null;
   name: string;
   address: string | null;
   latitude: number | null;
@@ -92,7 +104,7 @@ export interface PlaceCard {
   rating: number | null;
   coverImageUrl: string | null;
   shortDescription: string | null;
-  googleMapsUrl: string;
+  googleMapsUrl: string | null;
   likelyAudience: string | null;
   likelyVibe: string | null;
   collectionName?: string;
@@ -114,7 +126,7 @@ export interface ImportJob {
 
 export interface NormalizedPlace {
   name: string;
-  googleMapsUrl: string;
+  googleMapsUrl: string | null;
   googlePlaceId: string | null;
   notes: string | null;
   importTags: string[];

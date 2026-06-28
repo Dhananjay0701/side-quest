@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, Upload } from "lucide-react";
+import { Compass, Plus } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { UserMenu } from "@/components/auth/user-menu";
-import { ExploreSearch } from "@/components/explore/explore-search";
-import { UploadDialog } from "@/components/import/upload-dialog";
+import { CreateCollectionDialog } from "@/components/import/create-collection-dialog";
 import { getProfileInitials } from "@/lib/auth/profile-utils";
 import { clientProfileToProfile, useProfileQuery } from "@/lib/query/hooks";
 import { cn } from "@/lib/utils";
@@ -40,27 +39,30 @@ export function AppHeader() {
       </div>
     );
 
-  const uploadButton =
+  const createButton =
     profile && !isPending ? (
-      <UploadDialog
+      <CreateCollectionDialog
         trigger={
-          <button className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-border hover:text-foreground">
-            <Upload className="h-3.5 w-3.5" />
-            Upload CSV
+          <button
+            aria-label="New collection"
+            className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:border-border hover:text-foreground lg:px-3"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">New collection</span>
           </button>
         }
       />
     ) : (
       <Link
         href="/login?next=/"
-        className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-border hover:text-foreground"
+        aria-label="New collection"
+        className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:border-border hover:text-foreground lg:px-3"
       >
-        <Upload className="h-3.5 w-3.5" />
-        Upload CSV
+        <Plus className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">New collection</span>
       </Link>
     );
 
-  const isExplore = pathname.startsWith("/explore");
   const isStudio = pathname.startsWith("/studio");
 
   if (isStudio) {
@@ -68,16 +70,19 @@ export function AppHeader() {
   }
 
   return (
-    <header className="pwa-safe-top sticky top-0 z-50 border-b border-border/30 bg-[#0B1221]/95 backdrop-blur-xl">
+    <header className="pwa-safe-top sticky top-0 z-40 border-b border-border/30 bg-[#0B1221]/95 backdrop-blur-xl">
       <div className="lg:hidden">
-        <div className="flex h-12 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
+        <div className="flex h-12 items-center justify-between gap-2 px-4">
+          <Link href="/" className="flex min-w-0 items-center gap-2">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
               <Compass className="h-4 w-4" />
             </div>
-            <span className="text-sm font-semibold tracking-tight">Random Sidequest</span>
+            <span className="truncate text-sm font-semibold tracking-tight">Random Sidequest</span>
           </Link>
-          {authControls}
+          <div className="flex shrink-0 items-center gap-2">
+            {createButton}
+            {authControls}
+          </div>
         </div>
 
         <nav className="flex border-t border-border/20">
@@ -137,18 +142,10 @@ export function AppHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
-            {uploadButton}
+            {createButton}
             {authControls}
           </div>
         </div>
-
-        {isExplore && (
-          <div className="border-t border-border/15 px-6 pb-3 pt-2">
-            <div className="mx-auto max-w-xl">
-              <ExploreSearch />
-            </div>
-          </div>
-        )}
       </div>
     </header>
   );

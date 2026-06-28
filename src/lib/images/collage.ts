@@ -5,8 +5,8 @@ const GRADIENTS = [
   "from-slate-900 via-slate-800 to-teal-800/50",
 ];
 
-/** Default fallback when no cover image was uploaded at import time */
-export const DEFAULT_COVER_URL: string | null = "collections/bir.png";
+/** Default fallback when no cover image was uploaded at import time (null = gradient only) */
+export const DEFAULT_COVER_URL: string | null = null;
 
 export function getCollectionGradient(id: string): string {
   const hash = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);

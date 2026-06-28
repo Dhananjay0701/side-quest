@@ -3,6 +3,7 @@ import { parseGoogleMapsCsv, collectionNameFromFilename } from "@/lib/import/par
 import { runImportPipeline } from "@/lib/import/pipeline";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { saveLocalImage } from "@/lib/images/save-local-image";
+import { runInBackground } from "@/lib/cloudflare/wait-until";
 import { apiSuccess, apiError } from "@/lib/api/response";
 import { profileApiRoute } from "@/lib/debug/profiler";
 
@@ -75,7 +76,7 @@ export const POST = profileApiRoute("POST", "/api/import", async (req: Request) 
       return apiError("JOB_ERROR", jobError?.message ?? "Failed to create import job", 500);
     }
 
-    runImportPipeline({
+    const pipelinePromise = runImportPipeline({
       userId: profile.id,
       jobId: job.id,
       collection: normalized,
@@ -92,6 +93,8 @@ export const POST = profileApiRoute("POST", "/api/import", async (req: Request) 
         })
         .eq("id", job.id);
     });
+
+    await runInBackground(() => pipelinePromise);
 
     return apiSuccess({ jobId: job.id, status: "queued" }, 202);
   } catch (err) {

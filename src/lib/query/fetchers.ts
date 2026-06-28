@@ -2,6 +2,7 @@ import type { ExplorePageDTO } from "@/lib/cms/types";
 import type { ProfileRole } from "@/lib/auth/roles-edge";
 import { parseApiJson } from "@/lib/api/response";
 import type { CollectionCard, PlaceCard } from "@/lib/db/types";
+import type { GroupedSearchResults, CreatePlaceResult } from "@/lib/search/types";
 import { RECENT_PLACES_LIMIT } from "@/lib/query/constants";
 import {
   recordQueryFetchEnd,
@@ -57,6 +58,7 @@ export interface PlaceDetailPayload {
 export interface SearchResultsPayload {
   collections: CollectionCard[];
   places: PlaceCard[];
+  cities?: { id: string; name: string; href: string; imageUrl: string | null }[];
 }
 
 async function fetchJson<T>(
@@ -152,4 +154,86 @@ export async function fetchSearchResults(q: string, kind: "initial" | "backgroun
     "Search",
     kind
   );
+}
+
+export async function fetchSearchSuggest(
+  params: {
+    q: string;
+    sessionToken: string;
+    lat?: number;
+    lng?: number;
+    hero?: boolean;
+  },
+  signal?: AbortSignal
+): Promise<GroupedSearchResults> {
+  const search = new URLSearchParams({
+    q: params.q,
+    sessionToken: params.sessionToken,
+  });
+  if (params.lat != null) search.set("lat", String(params.lat));
+  if (params.lng != null) search.set("lng", String(params.lng));
+  if (params.hero) search.set("hero", "true");
+
+  const res = await fetch(`/api/search/suggest?${search.toString()}`, {
+    credentials: "same-origin",
+    signal,
+  });
+  const json = await parseApiJson<GroupedSearchResults>(res);
+  if (!res.ok) {
+    throw new Error(json.error?.message ?? `Suggest failed (${res.status})`);
+  }
+  return json.data as GroupedSearchResults;
+}
+
+export async function createPlace(payload: {
+  placeId?: string;
+  external?: Record<string, unknown>;
+  collectionId: string;
+  sessionToken?: string;
+}): Promise<CreatePlaceResult> {
+  const res = await fetch("/api/places", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const json = await parseApiJson<CreatePlaceResult>(res);
+  if (!res.ok) {
+    throw new Error(json.error?.message ?? `Add place failed (${res.status})`);
+  }
+  return json.data as CreatePlaceResult;
+}
+
+export interface CreateCollectionResult {
+  id: string;
+  name: string;
+  coverImageUrl: string | null;
+}
+
+export async function createCollection(payload: {
+  name: string;
+  description?: string;
+  tags?: string[];
+  coverFile?: File;
+  coverKey?: string;
+  isPublic?: boolean;
+}): Promise<CreateCollectionResult> {
+  const formData = new FormData();
+  formData.append("name", payload.name);
+  if (payload.description) formData.append("description", payload.description);
+  if (payload.tags?.length) formData.append("tags", JSON.stringify(payload.tags));
+  if (payload.coverKey) formData.append("coverKey", payload.coverKey);
+  if (payload.coverFile) formData.append("coverImage", payload.coverFile);
+  if (payload.isPublic) formData.append("isPublic", "true");
+
+  const res = await fetch("/api/collections", {
+    method: "POST",
+    credentials: "same-origin",
+    body: formData,
+  });
+  const json = await parseApiJson<CreateCollectionResult>(res);
+  if (!res.ok) {
+    throw new Error(json.error?.message ?? `Create collection failed (${res.status})`);
+  }
+  return json.data as CreateCollectionResult;
 }

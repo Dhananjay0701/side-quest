@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AssetImage } from "@/components/images/asset-image";
+import { CollectionAddPlaceSearch } from "@/components/collections/collection-add-place-search";
 import { CollectionFilters } from "@/components/collections/collection-filters";
 import { CollectionViewToggle } from "@/components/collections/collection-view-toggle";
 import { CoverUploadButton } from "@/components/collections/cover-upload-button";
@@ -17,6 +18,8 @@ import { imageCache } from "@/lib/images/cache";
 import { parseApiJson } from "@/lib/api/response";
 import type { CollectionViewMode } from "@/lib/map/types";
 import type { PlaceCard } from "@/lib/db/types";
+import { previewPlaceToCard } from "@/lib/search/preview-place-to-card";
+import type { PlaceSavedInfo } from "@/components/search/add-place-preview";
 
 const CollectionMapView = dynamic(
   () =>
@@ -57,6 +60,7 @@ export function CollectionDetailClient({
 }: CollectionDetailClientProps) {
   const [places, setPlaces] = useState<PlaceCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [displayPlaceCount, setDisplayPlaceCount] = useState(placeCount);
   const [viewMode, setViewMode] = useState<CollectionViewMode>("list");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
@@ -69,18 +73,44 @@ export function CollectionDetailClient({
     imageCache.registerCollectionCover(coverImageUrl);
   }, [coverImageUrl]);
 
-  const fetchPlaces = useCallback(async () => {
-    setLoading(true);
-    const params = new URLSearchParams({ collectionId, limit: "500" });
-    if (query) params.set("q", query);
-    if (category) params.set("category", category);
-    if (selectedTags.length) params.set("tags", selectedTags.join(","));
+  useEffect(() => {
+    setDisplayPlaceCount(placeCount);
+  }, [placeCount]);
 
-    const res = await fetch(`/api/places?${params}`);
-    const json = await parseApiJson<PlaceCard[]>(res);
-    setPlaces(json.data ?? []);
-    setLoading(false);
-  }, [collectionId, query, category, selectedTags]);
+  const fetchPlaces = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!options?.silent) setLoading(true);
+      const params = new URLSearchParams({ collectionId, limit: "500" });
+      if (query) params.set("q", query);
+      if (category) params.set("category", category);
+      if (selectedTags.length) params.set("tags", selectedTags.join(","));
+
+      const res = await fetch(`/api/places?${params}`);
+      const json = await parseApiJson<PlaceCard[]>(res);
+      setPlaces(json.data ?? []);
+      if (!options?.silent) setLoading(false);
+    },
+    [collectionId, query, category, selectedTags]
+  );
+
+  const handlePlaceAdded = useCallback(
+    (info: PlaceSavedInfo) => {
+      const hasFilters = Boolean(query || category || selectedTags.length);
+
+      if (!hasFilters) {
+        const card = previewPlaceToCard(info.place, info.result.placeId, name);
+        setPlaces((prev) => {
+          if (prev.some((p) => p.id === info.result.placeId)) return prev;
+          return [card, ...prev];
+        });
+        setDisplayPlaceCount((c) => c + 1);
+        return;
+      }
+
+      void fetchPlaces({ silent: true });
+    },
+    [query, category, selectedTags, name, fetchPlaces]
+  );
 
   useEffect(() => {
     fetchPlaces();
@@ -138,7 +168,7 @@ export function CollectionDetailClient({
           {/* Top bar — single row on mobile (count + icon actions) */}
           <div className="flex items-center justify-between gap-2 p-3 md:p-5">
             <span className="inline-flex min-w-0 shrink items-center rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm sm:px-3 sm:text-[11px]">
-              {formatPlaceCount(placeCount)}
+              {formatPlaceCount(displayPlaceCount)}
               {!loading && withPhotos > 0 && (
                 <span className="hidden font-normal normal-case text-white/70 sm:inline">
                   {" "}
@@ -173,9 +203,16 @@ export function CollectionDetailClient({
         </div>
       </div>
 
-      {/* List ↔ Map toggle */}
-      <div className="mb-4 flex justify-center md:mb-5">
+      {/* List ↔ Map toggle + owner add */}
+      <div className="mb-4 flex flex-col items-center gap-3 md:mb-5">
         <CollectionViewToggle mode={viewMode} onChange={handleViewModeChange} />
+        {isOwner ? (
+          <CollectionAddPlaceSearch
+            collectionId={collectionId}
+            collectionName={name}
+            onPlaceAdded={handlePlaceAdded}
+          />
+        ) : null}
       </div>
 
       {/* Shared filters — state preserved across view toggle */}

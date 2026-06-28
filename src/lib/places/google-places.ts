@@ -1,5 +1,6 @@
 import { extractPlaceNameFromUrl } from "@/lib/utils/google-maps";
 import { profileExternal } from "@/lib/debug/profiler";
+import { recordSearchUsage } from "@/lib/search/usage";
 
 const PLACES_BASE = "https://places.googleapis.com/v1";
 
@@ -48,7 +49,7 @@ export async function textSearchPlace(textQuery: string): Promise<GooglePlaceLoo
   const res = await fetch(`${PLACES_BASE}/places:searchText`, {
     method: "POST",
     headers: placesHeaders(
-      "places.id,places.displayName,places.photos,places.formattedAddress,places.rating,places.location"
+      "places.id,places.displayName,places.photos,places.formattedAddress,places.location"
     ),
     body: JSON.stringify({ textQuery, maxResultCount: 1 }),
   });
@@ -57,6 +58,8 @@ export async function textSearchPlace(textQuery: string): Promise<GooglePlaceLoo
     const body = await res.text();
     throw new Error(`Places text search failed (${res.status}): ${body}`);
   }
+
+  recordSearchUsage("google", "text_search");
 
   const json = (await res.json()) as {
     places?: {
@@ -98,6 +101,8 @@ export async function getPlaceDetails(placesApiId: string): Promise<GooglePlaceL
     const body = await res.text();
     throw new Error(`Places details failed (${res.status}): ${body}`);
   }
+
+  recordSearchUsage("google", "place_details");
 
   const place = (await res.json()) as {
     id?: string;
@@ -142,7 +147,11 @@ export async function resolvePlaceForPhotos(params: {
   importNotes?: string | null;
   collectionName?: string | null;
   placesApiId?: string | null;
+  /** Skip a second Details call when enrichment already fetched lookup */
+  preFetched?: GooglePlaceLookupResult | null;
 }): Promise<GooglePlaceLookupResult | null> {
+  if (params.preFetched) return params.preFetched;
+
   if (params.placesApiId) {
     const details = await getPlaceDetails(params.placesApiId);
     if (details) return details;
@@ -169,6 +178,8 @@ export async function fetchFirstPlacePhotoBytes(
   if (!res.ok) {
     throw new Error(`Place photo fetch failed (${res.status})`);
   }
+
+  recordSearchUsage("google", "place_photo");
 
   const contentType = res.headers.get("content-type") ?? "image/jpeg";
   const arrayBuffer = await res.arrayBuffer();
