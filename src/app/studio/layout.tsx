@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import { getStudioAccessIfAny } from "@/lib/cms/auth";
 import { StudioShell } from "@/components/studio/studio-shell";
 
+/** Studio routes read Supabase with the service-role key at request time. */
+export const dynamic = "force-dynamic";
+
 export default async function StudioLayout({ children }: { children: React.ReactNode }) {
   const { profile, canAccess } = await getStudioAccessIfAny();
 
