@@ -1,7 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { canAccessStudio, fetchProfileRoleByAuthUserId } from "@/lib/auth/roles-edge";
 
-const PROTECTED_API_PREFIXES = ["/api/import", "/api/collections/"];
+const PROTECTED_API_PREFIXES = ["/api/import", "/api/collections/", "/api/studio/"];
+const PROTECTED_PAGE_PREFIXES = ["/studio"];
 const AUTH_USER_ID_HEADER = "x-auth-user-id";
 const AUTH_USER_ID_COOKIE = "rsq-auth-uid";
 
@@ -52,6 +54,7 @@ export async function middleware(request: NextRequest) {
     });
     supabaseResponse = nextResponse;
   } else {
+    requestHeaders.delete(AUTH_USER_ID_HEADER);
     supabaseResponse.cookies.delete(AUTH_USER_ID_COOKIE);
   }
 
@@ -60,8 +63,40 @@ export async function middleware(request: NextRequest) {
     request.method !== "GET" &&
     PROTECTED_API_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
-  if (isProtectedApi && !user) {
-    return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Sign in required" } }, { status: 401 });
+  const isProtectedStudioApi = pathname.startsWith("/api/studio/");
+  const isProtectedStudioPage = PROTECTED_PAGE_PREFIXES.some((prefix) =>
+    pathname.startsWith(prefix)
+  );
+
+  if ((isProtectedApi || isProtectedStudioApi || isProtectedStudioPage) && !user) {
+    if (isProtectedStudioPage) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      loginUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    return NextResponse.json(
+      { error: { code: "UNAUTHORIZED", message: "Sign in required" } },
+      { status: 401 }
+    );
+  }
+
+  if (user && (isProtectedStudioApi || isProtectedStudioPage)) {
+    const role = await fetchProfileRoleByAuthUserId(user.id);
+    if (!role || !canAccessStudio(role)) {
+      if (isProtectedStudioPage) {
+        const homeUrl = request.nextUrl.clone();
+        homeUrl.pathname = "/";
+        homeUrl.search = "";
+        return NextResponse.redirect(homeUrl);
+      }
+
+      return NextResponse.json(
+        { error: { code: "FORBIDDEN", message: "Studio access required" } },
+        { status: 403 }
+      );
+    }
   }
 
   if (process.env.DEBUG_PROFILING === "true") {

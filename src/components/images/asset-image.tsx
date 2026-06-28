@@ -48,6 +48,23 @@ function AssetImageInner({
     registeredRef.current = false;
   }, [src]);
 
+  // Preload may finish after mount; cached images may not fire onLoad.
+  useEffect(() => {
+    if (loaded) return;
+    if (imageCache.isMemoryWarm(src)) {
+      setLoaded(true);
+      return;
+    }
+
+    const timers = [32, 100, 250, 600, 1200].map((ms) =>
+      window.setTimeout(() => {
+        if (imageCache.isMemoryWarm(src)) setLoaded(true);
+      }, ms)
+    );
+
+    return () => timers.forEach((id) => clearTimeout(id));
+  }, [src, loaded]);
+
   useEffect(() => {
     if (cacheTier === "homepage" || cacheTier === "static" || cacheTier === "idle") {
       imageCache.registerViewed(src);
@@ -154,6 +171,7 @@ function AssetImageInner({
         className={imageClassName}
         onLoadStart={handleLoadStart}
         onLoad={handleLoad}
+        onLoadingComplete={() => setLoaded(true)}
       />
     </div>
   );

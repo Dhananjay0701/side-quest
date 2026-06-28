@@ -12,9 +12,12 @@
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "generate-pwa-assets": "node scripts/generate-pwa-icons.mjs",
-    "combine-city-data": "tsx scripts/combine-city-data.ts"
+    "combine-city-data": "tsx scripts/combine-city-data.ts",
+    "generate-city-collections": "tsx scripts/generate-city-collections.ts",
+    "seed-explore-cms": "tsx scripts/seed-explore-cms.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1075.0",
     "@google/generative-ai": "^0.24.1",
     "@opennextjs/cloudflare": "^1.19.11",
     "@radix-ui/react-avatar": "^1.1.10",

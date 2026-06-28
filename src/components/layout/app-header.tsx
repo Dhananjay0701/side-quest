@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Compass, Upload } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { UserMenu } from "@/components/auth/user-menu";
+import { ExploreSearch } from "@/components/explore/explore-search";
 import { UploadDialog } from "@/components/import/upload-dialog";
 import { getProfileInitials } from "@/lib/auth/profile-utils";
 import { clientProfileToProfile, useProfileQuery } from "@/lib/query/hooks";
@@ -59,6 +60,13 @@ export function AppHeader() {
       </Link>
     );
 
+  const isExplore = pathname.startsWith("/explore");
+  const isStudio = pathname.startsWith("/studio");
+
+  if (isStudio) {
+    return null;
+  }
+
   return (
     <header className="pwa-safe-top sticky top-0 z-50 border-b border-border/30 bg-[#0B1221]/95 backdrop-blur-xl">
       <div className="lg:hidden">
@@ -96,41 +104,51 @@ export function AppHeader() {
         </nav>
       </div>
 
-      <div className="relative mx-auto hidden h-12 max-w-[1400px] items-center justify-between px-6 lg:flex">
-        <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/15 text-primary">
-            <Compass className="h-3.5 w-3.5" />
+      <div className="relative mx-auto hidden max-w-[1400px] lg:block">
+        <div className="flex h-12 items-center justify-between px-6">
+          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/15 text-primary">
+              <Compass className="h-3.5 w-3.5" />
+            </div>
+            <span className="text-sm font-semibold tracking-tight">Random Sidequest</span>
+          </Link>
+
+          <nav className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1">
+            {tabs.map((tab) => {
+              const active =
+                tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  prefetch
+                  className={cn(
+                    "relative px-4 py-1.5 text-sm font-medium transition-colors",
+                    active ? "text-foreground" : "text-muted/70 hover:text-foreground/80"
+                  )}
+                >
+                  {tab.label}
+                  {active && (
+                    <span className="absolute inset-x-3 -bottom-[1px] h-[2px] rounded-full bg-primary" />
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            {uploadButton}
+            {authControls}
           </div>
-          <span className="text-sm font-semibold tracking-tight">Random Sidequest</span>
-        </Link>
-
-        <nav className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1">
-          {tabs.map((tab) => {
-            const active =
-              tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                prefetch
-                className={cn(
-                  "relative px-4 py-1.5 text-sm font-medium transition-colors",
-                  active ? "text-foreground" : "text-muted/70 hover:text-foreground/80"
-                )}
-              >
-                {tab.label}
-                {active && (
-                  <span className="absolute inset-x-3 -bottom-[1px] h-[2px] rounded-full bg-primary" />
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="flex items-center gap-2">
-          {uploadButton}
-          {authControls}
         </div>
+
+        {isExplore && (
+          <div className="border-t border-border/15 px-6 pb-3 pt-2">
+            <div className="mx-auto max-w-xl">
+              <ExploreSearch />
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

@@ -17,6 +17,7 @@ function invalidate(
 const HOME_KEYS = [
   { queryKey: queryKeys.collections },
   { queryKey: queryKeys.explore },
+  { queryKey: queryKeys.explorePage },
   { queryKey: ["recentPlaces"] as const },
 ];
 
@@ -30,6 +31,7 @@ export function invalidateAfterCreateCollection(queryClient: QueryClient) {
   invalidate(queryClient, ["collections", "explore"], "create-collection", [
     { queryKey: queryKeys.collections },
     { queryKey: queryKeys.explore },
+    { queryKey: queryKeys.explorePage },
   ]);
 }
 
@@ -46,6 +48,7 @@ export function invalidateAfterUpdateCollection(queryClient: QueryClient, collec
   invalidate(queryClient, keys, "update-collection", [
     { queryKey: queryKeys.collections },
     { queryKey: queryKeys.explore },
+    { queryKey: queryKeys.explorePage },
     ...(collectionId ? [{ queryKey: queryKeys.collection(collectionId) }] : []),
   ]);
 }
@@ -105,6 +108,7 @@ export function clearAuthQueryCache(queryClient: QueryClient) {
   queryClient.removeQueries({ queryKey: queryKeys.profile });
   queryClient.removeQueries({ queryKey: queryKeys.collections });
   queryClient.removeQueries({ queryKey: queryKeys.explore });
+  queryClient.removeQueries({ queryKey: queryKeys.explorePage });
   queryClient.removeQueries({ queryKey: ["recentPlaces"] });
   queryClient.removeQueries({ queryKey: ["collection"] });
   queryClient.removeQueries({ queryKey: ["place"] });

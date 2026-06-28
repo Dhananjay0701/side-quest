@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
+import type { ExplorePageDTO } from "@/lib/cms/types";
 import type { Profile } from "@/lib/db/types";
 import {
   QUERY_GC_TIME_MS,
@@ -13,6 +14,7 @@ import {
   fetchCollectionDetail,
   fetchCollections,
   fetchExploreCollections,
+  fetchExplorePage,
   fetchPlaceDetail,
   fetchProfile,
   fetchRecentPlaces,
@@ -47,6 +49,7 @@ export function clientProfileToProfile(client: ClientProfile): Profile {
     display_name: client.displayName,
     email: client.email,
     avatar_url: client.avatarUrl,
+    role: client.role ?? "user",
   };
 }
 
@@ -114,6 +117,27 @@ export function useRecentPlacesQuery(enabled = true, limit = RECENT_PLACES_LIMIT
   });
 
   useCacheTelemetry(query, "Recent Places");
+  return query;
+}
+
+export function useExplorePageQuery(
+  initialData?: ExplorePageDTO | null,
+  options?: { enabled?: boolean }
+) {
+  const enabled = options?.enabled ?? true;
+  const query = useQuery({
+    queryKey: queryKeys.explorePage,
+    queryFn: ({ client, queryKey }) => {
+      const kind = client.getQueryData(queryKey) !== undefined ? "background" : "initial";
+      return fetchExplorePage(kind);
+    },
+    initialData: initialData ?? undefined,
+    enabled,
+    meta: { label: "Explore Page" },
+    ...queryDefaults,
+  });
+
+  useCacheTelemetry(query, "Explore Page");
   return query;
 }
 

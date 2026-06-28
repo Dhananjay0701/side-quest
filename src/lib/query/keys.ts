@@ -7,6 +7,7 @@ export const queryKeys = {
   collections: ["collections"] as const,
   recentPlaces: (limit = 12) => ["recentPlaces", { limit }] as const,
   explore: ["explore"] as const,
+  explorePage: ["explore", "page"] as const,
   collection: (collectionId: string) => ["collection", collectionId] as const,
   place: (placeId: string) => ["place", placeId] as const,
   search: (q: string) => ["search", { q }] as const,

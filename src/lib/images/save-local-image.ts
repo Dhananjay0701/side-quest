@@ -4,6 +4,8 @@ import {
   assetFolderForPrefix,
   buildStorageKey,
 } from "@/lib/images/assets";
+import { getR2BucketOrNull } from "@/lib/images/asset-debug";
+import { isR2S3Configured, uploadToR2ViaS3 } from "@/lib/images/r2-s3-upload";
 import { profileR2 } from "@/lib/debug/profiler";
 import { isProfilingEnabled } from "@/lib/debug/enabled";
 import { recordR2Transfer } from "@/lib/debug/metrics";
@@ -19,13 +21,7 @@ function extFromContentType(contentType: string): string {
 }
 
 async function getR2Bucket(): Promise<R2Bucket | null> {
-  try {
-    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
-    const { env } = await getCloudflareContext();
-    return (env as CloudflareEnv).ASSETS_BUCKET ?? null;
-  } catch {
-    return null;
-  }
+  return getR2BucketOrNull();
 }
 
 async function uploadToR2(
@@ -60,29 +56,59 @@ async function uploadToR2(
   });
 }
 
-/** Returns R2 storage key (e.g. `collections/cover-123.jpg`) */
+export type ImageStorageBackend = "r2-binding" | "r2-s3" | "local";
+
+export type ImageSaveResult = {
+  key: string;
+  backend: ImageStorageBackend;
+};
+
+/** Returns R2 storage key (e.g. `collections/cover-123.jpg`) or local path. */
 export async function saveImageBuffer(
   data: Uint8Array,
   contentType: string,
-  filenamePrefix: string
+  filenamePrefix: string,
+  explicitKey?: string
 ): Promise<string> {
+  return (await saveImageBufferWithMeta(data, contentType, filenamePrefix, explicitKey)).key;
+}
+
+export async function saveImageBufferWithMeta(
+  data: Uint8Array,
+  contentType: string,
+  filenamePrefix: string,
+  explicitKey?: string
+): Promise<ImageSaveResult> {
   if (data.byteLength > MAX_IMAGE_SIZE) {
     throw new Error("Image must be under 5 MB");
   }
 
   const ext = extFromContentType(contentType);
   const filename = `${filenamePrefix}-${Date.now()}.${ext}`;
-  const key = buildStorageKey(filenamePrefix, filename);
+  const key = explicitKey ?? buildStorageKey(filenamePrefix, filename);
 
-  const uploaded = await uploadToR2(data, key, contentType);
-  if (uploaded) return key;
+  // Prefer real R2 S3 API when configured. OpenNext dev exposes a local ASSETS_BUCKET
+  // binding (Miniflare) that does NOT write to the production bucket behind pub-*.r2.dev.
+  if (isR2S3Configured()) {
+    const s3 = await uploadToR2ViaS3(data, key, contentType);
+    if (s3.ok) return { key, backend: "r2-s3" };
+    throw new Error(
+      `R2 upload failed (${s3.errorCode ?? "UNKNOWN"}): ${s3.error}. ` +
+        "Check GET /api/studio/r2-status or restart dev server after editing .env.local."
+    );
+  }
 
-  // Local dev fallback — mirror R2 folder structure under public/images_to_use/
-  const folder = assetFolderForPrefix(filenamePrefix);
-  const localDir = path.join(LOCAL_IMAGES_DIR, folder);
+  const bindingUploaded = await uploadToR2(data, key, contentType);
+  if (bindingUploaded) return { key, backend: "r2-binding" };
+
+  // Local dev fallback when no R2 binding or S3 credentials
+  const localDir = explicitKey
+    ? path.join(LOCAL_IMAGES_DIR, path.dirname(explicitKey))
+    : path.join(LOCAL_IMAGES_DIR, assetFolderForPrefix(filenamePrefix));
+  const localFilename = explicitKey ? path.basename(explicitKey) : filename;
   await mkdir(localDir, { recursive: true });
-  await writeFile(path.join(localDir, filename), data);
-  return key;
+  await writeFile(path.join(localDir, localFilename), data);
+  return { key: `/images_to_use/${key}`, backend: "local" };
 }
 
 export async function saveLocalImage(file: File, filenamePrefix: string): Promise<string> {

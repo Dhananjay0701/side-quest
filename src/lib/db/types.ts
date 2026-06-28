@@ -5,6 +5,8 @@ export interface Category {
   icon: string | null;
 }
 
+export type ProfileRole = import("@/lib/auth/roles").ProfileRole;
+
 export interface Profile {
   id: string;
   auth_user_id: string;
@@ -12,6 +14,7 @@ export interface Profile {
   display_name: string;
   email: string | null;
   avatar_url: string | null;
+  role: ProfileRole;
 }
 
 /** @deprecated Use Profile — kept for migration compatibility */

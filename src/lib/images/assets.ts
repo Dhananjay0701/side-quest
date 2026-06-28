@@ -7,7 +7,7 @@
  * - Full URLs: `https://...`
  */
 
-export type AssetFolder = "collections" | "places" | "avatars";
+export type AssetFolder = "collections" | "places" | "avatars" | "cms" | "city_assets";
 
 export function getAssetsBaseUrl(): string {
   return (process.env.NEXT_PUBLIC_ASSETS_BASE_URL ?? "").replace(/\/$/, "");
@@ -33,7 +33,9 @@ export function legacyPathToKey(stored: string): string {
   if (
     stored.startsWith("collections/") ||
     stored.startsWith("places/") ||
-    stored.startsWith("avatars/")
+    stored.startsWith("avatars/") ||
+    stored.startsWith("cms/") ||
+    stored.startsWith("city_assets/")
   ) {
     return stored;
   }
@@ -48,6 +50,8 @@ export function legacyPathToKey(stored: string): string {
 export function resolveAssetUrl(stored: string | null | undefined): string | null {
   if (!stored) return null;
   if (stored.startsWith("http://") || stored.startsWith("https://")) return stored;
+  // Explicit local dev paths — serve from Next public/ even when R2 base URL is configured
+  if (stored.startsWith("/images_to_use/")) return stored;
 
   const key = legacyPathToKey(stored);
   const publicBase = getAssetsBaseUrl();

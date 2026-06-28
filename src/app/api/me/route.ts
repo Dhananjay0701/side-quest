@@ -15,6 +15,7 @@ export const GET = profileApiRoute("GET", "/api/me", async () => {
       displayName: profile.display_name,
       email: profile.email,
       avatarUrl: profile.avatar_url,
+      role: profile.role,
     });
   } catch (err) {
     return apiError("USER_ERROR", err instanceof Error ? err.message : "Failed to get user", 500);

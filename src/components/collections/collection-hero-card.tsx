@@ -3,9 +3,15 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, ChevronRight } from "lucide-react";
 import { CollectionCardMenu } from "@/components/collections/collection-card-menu";
+import { CollectionCardText } from "@/components/explore/collection-card-text";
 import { AssetImage } from "@/components/images/asset-image";
 import { getCollectionGradient, getCollectionInitials } from "@/lib/images/collage";
 import { getAboveFoldLimits } from "@/lib/images/cache/policy";
+import {
+  DESKTOP_SCROLL_CARD_TEXT,
+  MY_COLLECTIONS_MOBILE_CARD_TEXT,
+  metaVisibilityClass,
+} from "@/lib/cms/card-text-display";
 import { cn } from "@/lib/utils";
 import type { CollectionCard } from "@/lib/db/types";
 import { useEffect, useState } from "react";
@@ -25,6 +31,7 @@ export function CollectionHeroCard({
 }: CollectionHeroCardProps) {
   const gradient = getCollectionGradient(collection.id);
   const initials = getCollectionInitials(collection.name);
+  const placeLabel = `${collection.placeCount} places`;
 
   return (
     <div
@@ -62,34 +69,48 @@ export function CollectionHeroCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
         </div>
 
-        <div className="relative p-[4cqw]">
+        <div
+          className={cn(
+            "relative p-[4cqw] max-lg:hidden"
+          )}
+        >
           <span className="inline-block rounded-full bg-black/50 px-[2.5cqw] py-[0.8cqw] text-[3cqw] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
-            {collection.placeCount} places
+            {placeLabel}
+          </span>
+        </div>
+        <div
+          className={cn(
+            "relative p-[4cqw] lg:hidden",
+            metaVisibilityClass(MY_COLLECTIONS_MOBILE_CARD_TEXT)
+          )}
+        >
+          <span className="inline-block rounded-full bg-black/50 px-[2.5cqw] py-[0.8cqw] text-[3cqw] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
+            {placeLabel}
           </span>
         </div>
 
         <div className="relative mt-auto flex flex-col gap-[2cqw] p-[4cqw]">
-          <div className="flex flex-col gap-[1.5cqw]">
-            <h2 className="line-clamp-2 text-[6.5cqw] font-semibold leading-snug tracking-tight text-white">
-              {collection.name}
-            </h2>
-            {collection.description && (
-              <p className="hidden line-clamp-2 text-[4.3cqw] leading-relaxed text-white/60 md:block">
-                {collection.description}
-              </p>
-            )}
-            {collection.topTags.length > 0 && (
-              <div className="hidden flex-wrap gap-[1cqw] md:flex">
-                {collection.topTags.slice(0, 3).map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-white/15 bg-black/30 px-[2cqw] py-[0.6cqw] text-[3.2cqw] font-medium text-white/70 backdrop-blur-sm"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
+          <div className="flex flex-col gap-[1.5cqw] lg:hidden">
+            <CollectionCardText
+              display={MY_COLLECTIONS_MOBILE_CARD_TEXT}
+              name={collection.name}
+              description={collection.description}
+              tags={collection.topTags}
+              nameClassName="line-clamp-2 text-[6.5cqw] font-semibold leading-snug tracking-tight text-white"
+              descriptionClassName="text-[4.3cqw] leading-snug text-white/60"
+              tagClassName="gap-[1cqw]"
+            />
+          </div>
+          <div className="hidden flex-col gap-[1.5cqw] lg:flex">
+            <CollectionCardText
+              display={DESKTOP_SCROLL_CARD_TEXT}
+              name={collection.name}
+              description={collection.description}
+              tags={collection.topTags}
+              nameClassName="line-clamp-2 text-[6.5cqw] font-semibold leading-snug tracking-tight text-white"
+              descriptionClassName="text-[4.3cqw] leading-snug text-white/60"
+              tagClassName="gap-[1cqw]"
+            />
           </div>
 
           <div className="flex justify-end">

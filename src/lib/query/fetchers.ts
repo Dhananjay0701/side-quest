@@ -1,3 +1,5 @@
+import type { ExplorePageDTO } from "@/lib/cms/types";
+import type { ProfileRole } from "@/lib/auth/roles-edge";
 import { parseApiJson } from "@/lib/api/response";
 import type { CollectionCard, PlaceCard } from "@/lib/db/types";
 import { RECENT_PLACES_LIMIT } from "@/lib/query/constants";
@@ -13,6 +15,7 @@ export interface ClientProfile {
   displayName: string;
   email: string | null;
   avatarUrl: string | null;
+  role?: ProfileRole;
 }
 
 export interface CollectionDetailPayload {
@@ -100,6 +103,15 @@ export async function fetchRecentPlaces(
     `/api/places/recent?limit=${limit}`,
     key,
     "Recent Places",
+    kind
+  );
+}
+
+export async function fetchExplorePage(kind: "initial" | "background" = "initial") {
+  return fetchJson<ExplorePageDTO>(
+    "/api/explore/page",
+    queryKeys.explorePage,
+    "Explore Page",
     kind
   );
 }

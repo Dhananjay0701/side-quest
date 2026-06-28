@@ -11,7 +11,10 @@ import type { Profile } from "@/lib/db/types";
 export { getProfileInitials };
 
 export class AuthError extends Error {
-  constructor(message = "Unauthorized") {
+  constructor(
+    message = "Unauthorized",
+    public readonly status: 401 | 403 = 401
+  ) {
     super(message);
     this.name = "AuthError";
   }
@@ -56,7 +59,7 @@ async function fetchProfileByAuthUserId(authUserId: string): Promise<Profile | n
   const admin = createAdminClient();
   const { data: profile } = await admin
     .from("profiles")
-    .select("id, auth_user_id, username, display_name, email, avatar_url")
+    .select("id, auth_user_id, username, display_name, email, avatar_url, role")
     .eq("auth_user_id", authUserId)
     .maybeSingle();
 
@@ -97,7 +100,7 @@ export const getAuthProfile = cache(async (): Promise<Profile | null> =>
         display_name: displayName,
         avatar_url: (user.user_metadata?.avatar_url as string | undefined) ?? null,
       })
-      .select("id, auth_user_id, username, display_name, email, avatar_url")
+      .select("id, auth_user_id, username, display_name, email, avatar_url, role")
       .single();
 
     if (error || !created) return null;
@@ -108,7 +111,7 @@ export const getAuthProfile = cache(async (): Promise<Profile | null> =>
 export async function requireAuthProfile(): Promise<Profile> {
   return profileAuth("Require Auth Profile", async () => {
     const profile = await getAuthProfile();
-    if (!profile) throw new AuthError();
+    if (!profile) throw new AuthError("Unauthorized", 401);
     return profile;
   });
 }
