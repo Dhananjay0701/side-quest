@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{display:none}
+html,body{background:#0c111a;font-family:'Inter',system-ui,sans-serif;color:#fff;font-size:16px}
+
+.root{background:#0c111a;max-width:390px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative}
+
+/* ── STICKY HEADER ── */
+.hdr{position:sticky;top:0;z-index:60;background:#0c111a;padding:13px 18px 0}
+.hdr-border{border-bottom:1px solid rgba(255,255,255,.06)}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+.brand{display:flex;align-items:center;gap:8px}
+.brand-mark{width:27px;height:27px;border-radius:7px;background:#2dd4bf;display:flex;align-items:center;justify-content:center}
+.brand-mark svg{width:14px;height:14px;fill:#0c111a}
+.brand-name{font-size:14px;font-weight:600;letter-spacing:-.3px;color:#fff}
+.btn-signin{background:#fff;color:#0c111a;font-size:12.5px;font-weight:600;padding:6px 14px;border-radius:22px;border:none;cursor:pointer;letter-spacing:-.1px}
+
+.search-row{position:relative;margin-bottom:11px}
+.search-in{width:100%;background:#161e2d;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:11px 40px 11px 40px;font-size:14px;color:rgba(255,255,255,.9);font-family:'Inter',sans-serif;outline:none;transition:border-color .2s,background .2s;letter-spacing:-.1px}
+.search-in::placeholder{color:rgba(255,255,255,.28);font-weight:300}
+.search-in:focus{border-color:rgba(45,212,191,.4);background:#19243a}
+.si-l{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;opacity:.35;pointer-events:none}
+.si-r{position:absolute;right:14px;top:50%;transform:translateY(-50%);opacity:.3;cursor:pointer}
+.si-r svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:1.5;stroke-linecap:round}
+
+.chips-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:12px}
+.ch{flex-shrink:0;padding:5px 13px;border-radius:22px;font-size:12px;font-weight:500;border:1px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.45);cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;transition:all .18s;letter-spacing:.01em}
+.ch.on{background:#2dd4bf;color:#0c111a;border-color:#2dd4bf;font-weight:600}
+
+/* ── HERO ── */
+.hero{padding:28px 18px 24px}
+.hero-label{font-size:10.5px;font-weight:500;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:14px}
+.hero-h{font-size:30px;line-height:1.15;letter-spacing:-.4px;font-weight:300;color:#fff;margin-bottom:10px}
+.hero-h em{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:400;color:#fff}
+.hero-p{font-size:14px;font-weight:300;color:rgba(255,255,255,.42);line-height:1.7;letter-spacing:.01em;max-width:260px}
+.hero-rule{height:1px;background:rgba(255,255,255,.06);margin-top:24px}
+
+/* ── SECTION HEADERS ── */
+.sec{padding:28px 18px 0}
+.sec-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px}
+.sec-label{font-size:10px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.sec-all{font-size:12px;font-weight:500;color:rgba(255,255,255,.3);cursor:pointer;letter-spacing:-.1px;transition:color .15s}
+.sec-all:hover{color:rgba(255,255,255,.6)}
+
+/* ── START HERE CARDS ── */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sc{position:relative;border-radius:16px;overflow:hidden;cursor:pointer}
+.sc.hero-card{grid-column:1/-1;aspect-ratio:16/9}
+.sc.tall{aspect-ratio:.72}
+.sc.wide{grid-column:1/-1;aspect-ratio:16/8}
+.sc img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
+.sc:hover img{transform:scale(1.03)}
+.sc-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,10,18,.92) 0%,rgba(6,10,18,.35) 45%,rgba(6,10,18,.05) 100%)}
+.sc-body{position:absolute;bottom:0;left:0;right:0;padding:16px}
+.sc-cat{font-size:9.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:6px}
+.sc-name{font-size:15px;font-weight:600;color:#fff;line-height:1.25;letter-spacing:-.25px;margin-bottom:4px}
+.sc.hero-card .sc-name{font-size:20px;letter-spacing:-.4px}
+.sc.wide .sc-name{font-size:18px;letter-spacing:-.35px}
+.sc-line{font-size:11.5px;color:rgba(255,255,255,.5);line-height:1.5;margin-bottom:8px;font-weight:300}
+.sc.hero-card .sc-line{font-size:12.5px}
+.sc-meta{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.3px;font-weight:400}
+/* no arrows, no chips — just editorial space */
+
+/* ── TRENDING ── */
+.tr-scroll{display:flex;gap:8px;overflow-x:auto;padding:0 18px 4px}
+.tc{flex-shrink:0;width:178px;border-radius:14px;overflow:hidden;cursor:pointer}
+.tc-img{position:relative;height:138px}
+.tc-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease}
+.tc:hover .tc-img img{transform:scale(1.04)}
+.tc-fade{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,10,18,.85) 0%,transparent 55%)}
+.tc-body{background:#131a27;padding:10px 11px 12px}
+.tc-name{font-size:13px;font-weight:600;color:#fff;letter-spacing:-.2px;margin-bottom:3px;line-height:1.25}
+.tc-desc{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;font-weight:300;margin-bottom:7px}
+.tc-meta{font-size:9.5px;color:rgba(255,255,255,.25);letter-spacing:.2px}
+
+/* ── OFFICIAL ── */
+.off-list{display:flex;flex-direction:column;gap:8px}
+.oc{border-radius:16px;overflow:hidden;cursor:pointer;position:relative;height:158px}
+.oc img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+.oc:hover img{transform:scale(1.03)}
+.oc-fade{position:absolute;inset:0;background:linear-gradient(105deg,rgba(6,10,18,.88) 0%,rgba(6,10,18,.5) 50%,rgba(6,10,18,.1) 100%)}
+.oc-body{position:absolute;inset:0;padding:18px;display:flex;flex-direction:column;justify-content:flex-end}
+.oc-eyebrow{font-size:9px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:7px}
+.oc-name{font-size:17px;font-weight:600;color:#fff;letter-spacing:-.4px;line-height:1.2;margin-bottom:4px;max-width:220px}
+.oc-desc{font-size:11.5px;color:rgba(255,255,255,.48);font-weight:300;line-height:1.5;margin-bottom:9px;max-width:210px}
+.oc-foot{display:flex;gap:14px}
+.oc-m{font-size:9.5px;color:rgba(255,255,255,.28);letter-spacing:.2px}
+
+/* ── CITIES ── */
+.city-row{display:flex;gap:16px;overflow-x:auto;padding:0 18px 4px}
+.city{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}
+.city-ring{width:64px;height:64px;border-radius:50%;overflow:hidden;border:1.5px solid rgba(255,255,255,.09);transition:border-color .2s}
+.city:hover .city-ring{border-color:rgba(255,255,255,.3)}
+.city-ring img{width:100%;height:100%;object-fit:cover;display:block}
+.city-name{font-size:10.5px;font-weight:400;color:rgba(255,255,255,.42);letter-spacing:.1px}
+
+/* ── INTERESTS ── */
+.int-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.int-card{background:#131a27;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px 10px 14px;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;transition:border-color .2s,background .2s;text-align:center}
+.int-card:hover{border-color:rgba(255,255,255,.18);background:#18212e}
+.int-ico{font-size:20px;margin-bottom:7px;opacity:.75}
+.int-lbl{font-size:10.5px;font-weight:500;color:rgba(255,255,255,.45);letter-spacing:.1px;line-height:1.35}
+
+/* ── TRUST ── */
+.trust{margin:28px 18px 0;padding:0 0 2px}
+.trust-txt{font-size:12px;color:rgba(255,255,255,.25);font-weight:300;line-height:1.8;letter-spacing:.1px}
+.trust-txt span{color:rgba(255,255,255,.55);font-weight:400}
+
+/* ── CTA ── */
+.cta-wrap{margin:24px 18px 0}
+.cta{background:#111827;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px 22px 26px;position:relative;overflow:hidden}
+.cta-glow{position:absolute;top:-60px;right:-40px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(45,212,191,.07) 0%,transparent 70%);pointer-events:none}
+.cta-eyebrow{font-size:10px;font-weight:500;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px}
+.cta-h{font-size:22px;font-weight:500;color:#fff;letter-spacing:-.4px;line-height:1.25;margin-bottom:8px}
+.cta-h em{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:400}
+.cta-p{font-size:13px;font-weight:300;color:rgba(255,255,255,.4);line-height:1.7;margin-bottom:22px;max-width:270px}
+.cta-btn{width:100%;background:#2dd4bf;color:#0c111a;font-size:14.5px;font-weight:600;padding:14px;border-radius:12px;border:none;cursor:pointer;letter-spacing:-.2px;font-family:'Inter',sans-serif;transition:opacity .15s}
+.cta-btn:hover{opacity:.9}
+.cta-sub{margin-top:14px;font-size:11px;color:rgba(255,255,255,.2);text-align:center;font-weight:300;letter-spacing:.1px}
+
+/* ── BOTTOM NAV ── */
+.bot-nav{position:sticky;bottom:0;background:#0c111a;border-top:1px solid rgba(255,255,255,.06);display:flex;padding:9px 0 20px}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 0}
+.ni svg{width:22px;height:22px;stroke:rgba(255,255,255,.22);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
+.ni.on svg{stroke:#2dd4bf}
+.ni-lbl{font-size:9.5px;font-weight:500;color:rgba(255,255,255,.22);transition:color .15s}
+.ni.on .ni-lbl{color:#2dd4bf;font-weight:600}
+
+/* spacers */
+.sp{padding-bottom:28px}
+.sp-sm{padding-bottom:6px}
+</style>
+</head>
+<body>
+<div class="root">
+
+<!-- HEADER -->
+<div class="hdr hdr-border">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 16 16"><path d="M8 1l1.8 5.4H15l-4.6 3.3 1.8 5.4L8 12l-4.2 3.1 1.8-5.4L1 6.4h5.2z"/></svg>
+      </div>
+      <span class="brand-name">Random SideQuest</span>
+    </div>
+    <button class="btn-signin">Sign in</button>
+  </div>
+
+  <div class="search-row">
+    <svg class="si-l" viewBox="0 0 18 18" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round"><circle cx="7.5" cy="7.5" r="5"/><path d="M13 13l2.5 2.5"/></svg>
+    <input class="search-in" placeholder="Search cities, places or experiences…">
+    <span class="si-r">
+      <svg viewBox="0 0 18 18"><line x1="2" y1="5" x2="16" y2="5"/><line x1="4" y1="9" x2="14" y2="9"/><line x1="6" y1="13" x2="12" y2="13"/></svg>
+    </span>
+  </div>
+
+  <div class="chips-row" id="chips">
+    <button class="ch on" onclick="pick(this)">All</button>
+    <button class="ch" onclick="pick(this)">Trending</button>
+    <button class="ch" onclick="pick(this)">Hidden Gems</button>
+    <button class="ch" onclick="pick(this)">Food</button>
+    <button class="ch" onclick="pick(this)">Coffee</button>
+    <button class="ch" onclick="pick(this)">Nature</button>
+    <button class="ch" onclick="pick(this)">Architecture</button>
+    <button class="ch" onclick="pick(this)">Photography</button>
+    <button class="ch" onclick="pick(this)">Date Ideas</button>
+    <button class="ch" onclick="pick(this)">Nightlife</button>
+    <button class="ch" onclick="pick(this)">Road Trips</button>
+    <button class="ch" onclick="pick(this)">Solo Travel</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">Curated travel</div>
+  <h1 class="hero-h">Some places<br>stay with <em>you.</em></h1>
+  <p class="hero-p">Collections of hidden gems and local favourites — curated for the curious.</p>
+  <div class="hero-rule"></div>
+</div>
+
+<!-- START HERE -->
+<div class="sec">
+  <div class="sec-hd">
+    <span class="sec-label">Start here</span>
+    <span class="sec-all">View all</span>
+  </div>
+  <div class="sg">
+
+    <div class="sc hero-card">
+      <img src="https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=760&q=85" alt="Goa" loading="lazy">
+      <div class="sc-grad"></div>
+      <div class="sc-body">
+        <div class="sc-cat">Goa · Beach</div>
+        <div class="sc-name">The Slow Goa</div>
+        <div class="sc-line">Hidden beaches, cozy cafés and laid-back vibes</div>
+        <div class="sc-meta">12 places</div>
+      </div>
+    </div>
+
+    <div class="sc tall">
+      <img src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=85" alt="Tokyo" loading="lazy">
+      <div class="sc-grad"></div>
+      <div class="sc-body">
+        <div class="sc-cat">Tokyo · Night</div>
+        <div class="sc-name">Tokyo After Dark</div>
+        <div class="sc-line">Neon lights and tiny bars</div>
+        <div class="sc-meta">16 places</div>
+      </div>
+    </div>
+
+    <div class="sc tall">
+      <img src="https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400&q=85" alt="London" loading="lazy">
+      <div class="sc-grad"></div>
+      <div class="sc-body">
+        <div class="sc-cat">London · Coffee</div>
+        <div class="sc-name">London's Secret Cafés</div>
+        <div class="sc-line">Spots the locals love</div>
+        <div class="sc-meta">9 places</div>
+      </div>
+    </div>
+
+    <div class="sc wide">
+      <img src="https://images.unsplash.com/photo-1520342868574-5fa3804e551c?w=760&q=85" alt="Budapest" loading="lazy">
+      <div class="sc-grad"></div>
+      <div class="sc-body">
+        <div class="sc-cat">Budapest · Architecture</div>
+        <div class="sc-name">Budapest Hidden Gems</div>
+        <div class="sc-line">Ruins, baths and secret rooftop views</div>
+        <div class="sc-meta">13 places</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TRENDING -->
+<div class="sec sp-sm">
+  <div class="sec-hd">
+    <span class="sec-label">Trending this week</span>
+    <span class="sec-all">View all</span>
+  </div>
+</div>
+<div class="tr-scroll">
+
+  <div class="tc">
+    <div class="tc-img">
+      <img src="https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=380&q=80" alt="Santorini" loading="lazy">
+      <div class="tc-fade"></div>
+    </div>
+    <div class="tc-body">
+      <div class="tc-name">Santorini Sunrise</div>
+      <div class="tc-desc">Best spots to watch dawn break over the caldera</div>
+      <div class="tc-meta">8 places · Half day</div>
+    </div>
+  </div>
+
+  <div class="tc">
+    <div class="tc-img">
+      <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=380&q=80" alt="Bali" loading="lazy">
+      <div class="tc-fade"></div>
+    </div>
+    <div class="tc-body">
+      <div class="tc-name">Bali Slow Life</div>
+      <div class="tc-desc">Temples, rice fields and honest warungs</div>
+      <div class="tc-meta">14 places · Full day</div>
+    </div>
+  </div>
+
+  <div class="tc">
+    <div class="tc-img">
+      <img src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=380&q=80" alt="Istanbul" loading="lazy">
+      <div class="tc-fade"></div>
+    </div>
+    <div class="tc-body">
+      <div class="tc-name">Istanbul Bazaars</div>
+      <div class="tc-desc">Spice routes, hidden teahouses and the sound of prayer</div>
+      <div class="tc-meta">11 places · Half day</div>
+    </div>
+  </div>
+
+  <div class="tc">
+    <div class="tc-img">
+      <img src="https://images.unsplash.com/photo-1548013146-72479768bada?w=380&q=80" alt="Marrakech" loading="lazy">
+      <div class="tc-fade"></div>
+    </div>
+    <div class="tc-body">
+      <div class="tc-name">Marrakech Medina</div>
+      <div class="tc-desc">Colors, souks and the quiet of a riad courtyard</div>
+      <div class="tc-meta">10 places · Full day</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- OFFICIAL CURATED -->
+<div class="sec sp">
+  <div class="sec-hd">
+    <span class="sec-label">Official curated</span>
+    <span class="sec-all">View all</span>
+  </div>
+  <div class="off-list">
+
+    <div class="oc">
+      <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=760&q=80" alt="Paris" loading="lazy">
+      <div class="oc-fade"></div>
+      <div class="oc-body">
+        <div class="oc-eyebrow">Paris · 15 places</div>
+        <div class="oc-name">Paris Beyond the Postcards</div>
+        <div class="oc-desc">Secret spots only locals talk about</div>
+        <div class="oc-foot"><span class="oc-m">Half day</span></div>
+      </div>
+    </div>
+
+    <div class="oc">
+      <img src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=760&q=80" alt="Kyoto" loading="lazy">
+      <div class="oc-fade"></div>
+      <div class="oc-body">
+        <div class="oc-eyebrow">Kyoto · 11 places</div>
+        <div class="oc-name">Kyoto Temple Walk</div>
+        <div class="oc-desc">Ancient paths, bamboo groves and the weight of silence</div>
+        <div class="oc-foot"><span class="oc-m">Full day</span></div>
+      </div>
+    </div>
+
+    <div class="oc">
+      <img src="https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=760&q=80" alt="Lisbon" loading="lazy">
+      <div class="oc-fade"></div>
+      <div class="oc-body">
+        <div class="oc-eyebrow">Lisbon · 9 places</div>
+        <div class="oc-name">Lisbon's Hidden Hills</div>
+        <div class="oc-desc">Miradouros, tascas and fado drifting from a window</div>
+        <div class="oc-foot"><span class="oc-m">Full day</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CITIES -->
+<div class="sec" style="padding-top:0">
+  <div class="sec-hd">
+    <span class="sec-label">Destinations</span>
+    <span class="sec-all">View all</span>
+  </div>
+</div>
+<div class="city-row" style="padding-bottom:28px">
+  <div class="city"><div class="city-ring"><img src="https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=160&q=70" loading="lazy"></div><span class="city-name">Goa</span></div>
+  <div class="city"><div class="city-ring"><img src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=160&q=70" loading="lazy"></div><span class="city-name">Tokyo</span></div>
+  <div class="city"><div class="city-ring"><img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=160&q=70" loading="lazy"></div><span class="city-name">Paris</span></div>
+  <div class="city"><div class="city-ring"><img src="https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=160&q=70" loading="lazy"></div><span class="city-name">London</span></div>
+  <div class="city"><div class="city-ring"><img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=160&q=70" loading="lazy"></div><span class="city-name">Bali</span></div>
+  <div class="city"><div class="city-ring"><img src="https://images.unsplash.com/photo-1520342868574-5fa3804e551c?w=160&q=70" loading="lazy"></div><span class="city-name">Budapest</span></div>
+  <div class="city"><div class="city-ring"><img src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=160&q=70" loading="lazy"></div><span class="city-name">Istanbul</span></div>
+  <div class="city"><div class="city-ring"><img src="https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=160&q=70" loading="lazy"></div><span class="city-name">Amsterdam</span></div>
+</div>
+
+<!-- INTERESTS -->
+<div class="sec sp">
+  <div class="sec-hd">
+    <span class="sec-label">Discover by interest</span>
+  </div>
+  <div class="int-grid">
+    <div class="int-card"><span class="int-ico">☕</span><span class="int-lbl">Coffee</span></div>
+    <div class="int-card"><span class="int-ico">🍜</span><span class="int-lbl">Food</span></div>
+    <div class="int-card"><span class="int-ico">🌿</span><span class="int-lbl">Nature</span></div>
+    <div class="int-card"><span class="int-ico">🏛</span><span class="int-lbl">History</span></div>
+    <div class="int-card"><span class="int-ico">📐</span><span class="int-lbl">Architecture</span></div>
+    <div class="int-card"><span class="int-ico">💻</span><span class="int-lbl">Nomads</span></div>
+    <div class="int-card"><span class="int-ico">📷</span><span class="int-lbl">Photography</span></div>
+    <div class="int-card"><span class="int-ico">💑</span><span class="int-lbl">Romantic</span></div>
+    <div class="int-card"><span class="int-ico">🌙</span><span class="int-lbl">Nightlife</span></div>
+    <div class="int-card"><span class="int-ico">🎒</span><span class="int-lbl">Solo</span></div>
+    <div class="int-card"><span class="int-ico">🗺</span><span class="int-lbl">Road Trips</span></div>
+    <div class="int-card"><span class="int-ico">💎</span><span class="int-lbl">Hidden Gems</span></div>
+  </div>
+</div>
+
+<!-- TRUST -->
+<div class="trust">
+  <p class="trust-txt">Sourced from <span>travel guides, local experts,</span><br>community picks and <span>AI curation.</span></p>
+</div>
+
+<!-- CTA -->
+<div class="cta-wrap sp">
+  <div class="cta">
+    <div class="cta-glow"></div>
+    <div class="cta-eyebrow">For members</div>
+    <div class="cta-h">100+ collections,<br>all <em>yours.</em></div>
+    <p class="cta-p">Save places, create collections, follow explorers and get recommendations built around how you travel.</p>
+    <button class="cta-btn">Create a free account</button>
+    <div class="cta-sub">Sign in with Google or Apple — no password needed</div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bot-nav">
+  <div class="ni on">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="12,8 14.5,13 12,11.5 9.5,13"/></svg>
+    <span class="ni-lbl">Explore</span>
+  </div>
+  <div class="ni">
+    <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z" rx="2"/><path d="M4 9h16M9 4v16"/></svg>
+    <span class="ni-lbl" style="color:transparent">.</span>
+  </div>
+  <div class="ni">
+    <svg viewBox="0 0 24 24"><path d="M3 11a9 9 0 1 0 18 0 9 9 0 0 0-18 0z"/><path d="M12 2v2M12 20v2M2 12H4M20 12h2"/></svg>
+    <span class="ni-lbl" style="color:transparent">.</span>
+  </div>
+  <div class="ni">
+    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    <span class="ni-lbl" style="color:transparent">.</span>
+  </div>
+  <div class="ni">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    <span class="ni-lbl" style="color:transparent">.</span>
+  </div>
+</div>
+
+</div>
+<script>
+function pick(el){
+  document.querySelectorAll('.ch').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+}
+</script>
+</body>
+</html>
