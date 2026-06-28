@@ -125,7 +125,7 @@ export async function publishExploreDraft(actorId: string): Promise<{ versionNum
     payload: { versionNumber: draft.version_number },
   });
 
-  revalidateExplorePage();
+  await revalidateExplorePage();
 
   return { versionNumber: draft.version_number };
 }

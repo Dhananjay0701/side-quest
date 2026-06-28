@@ -58,8 +58,26 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Bucket | Purpose |
 |--------|---------|
-| `random-sidequest-opennext-cache` | OpenNext incremental cache |
+| `random-sidequest-opennext-cache` | OpenNext incremental cache (explore page DTO, ISR data) |
 | `random-sidequest-assets` | App images (`collections/`, `places/`, `avatars/`) |
+
+### OpenNext tag cache (required for `revalidateTag` after Studio publish)
+
+Explore page data is cached in R2 between publishes. `revalidateTag` needs a D1 tag cache + queue on Cloudflare:
+
+```bash
+# 1. Create D1 database (copy database_id into wrangler.jsonc → d1_databases)
+npx wrangler d1 create random-sidequest-next-tag-cache
+
+# 2. Create revalidations table (local + remote)
+npx wrangler d1 execute random-sidequest-next-tag-cache --local --file=scripts/setup-next-tag-cache-d1.sql
+npx wrangler d1 execute random-sidequest-next-tag-cache --remote --file=scripts/setup-next-tag-cache-d1.sql
+
+# 3. Deploy (DO migration for NEXT_CACHE_DO_QUEUE runs on first deploy)
+npm run deploy
+```
+
+Publish also bumps the published revision version, which changes the cache key even before tag revalidation runs.
 
 Upload existing images from `public/images_to_use/` into R2 with folder prefixes. See `supabase/R2_ASSETS.md`.
 

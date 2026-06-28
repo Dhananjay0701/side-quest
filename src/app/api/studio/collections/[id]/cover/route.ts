@@ -56,7 +56,7 @@ export const POST = profileApiRoute(
 
       if (dbError) throw dbError;
 
-      revalidateExplorePage();
+      await revalidateExplorePage();
 
       return apiSuccess({
         coverImageUrl: resolveAssetUrl(storageKey),

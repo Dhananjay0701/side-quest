@@ -89,6 +89,14 @@ function keysForRemove(collectionId?: string) {
     : ["collections", "recentPlaces", "explore"];
 }
 
+/** Explore CMS published — refresh live page data. */
+export function invalidateAfterPublishExplore(queryClient: QueryClient) {
+  invalidate(queryClient, ["explorePage", "explore"], "publish-explore", [
+    { queryKey: queryKeys.explorePage },
+    { queryKey: queryKeys.explore },
+  ]);
+}
+
 /** Sign-in — refresh profile and cached lists. */
 export function invalidateAfterLogin(queryClient: QueryClient) {
   invalidate(

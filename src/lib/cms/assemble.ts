@@ -17,6 +17,7 @@ import {
   getCmsRevision,
   getCmsSectionItems,
   getCmsSections,
+  getPublishedExploreCacheKey,
   getTopTagsForCollections,
   loadCollectionsMap,
   mapCollectionToExplore,
@@ -265,7 +266,8 @@ function emptyFeatured(variant: "hero" | "tall" | "wide") {
 }
 
 export async function getPublishedExplorePage(): Promise<ExplorePageDTO | null> {
-  return unstable_cache(() => assembleExplorePageUncached("published"), ["explore-page-dto"], {
+  const cacheKey = await getPublishedExploreCacheKey();
+  return unstable_cache(() => assembleExplorePageUncached("published"), ["explore-page-dto", cacheKey], {
     tags: [EXPLORE_PAGE_CACHE_TAG],
     revalidate: false,
   })();

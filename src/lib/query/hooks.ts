@@ -29,6 +29,7 @@ import {
   invalidateAfterLogin,
   invalidateAfterRemovePlace,
   invalidateAfterPlaceUpdate,
+  invalidateAfterPublishExplore,
   invalidateAfterUpdateCollection,
   invalidateAfterUpload,
 } from "@/lib/query/invalidation";
@@ -215,6 +216,7 @@ export function useQueryInvalidation() {
     afterAddPlace: (collectionId?: string) => invalidateAfterAddPlace(queryClient, collectionId),
     afterRemovePlace: (collectionId?: string) => invalidateAfterRemovePlace(queryClient, collectionId),
     afterPlaceUpdate: (placeId: string) => invalidateAfterPlaceUpdate(queryClient, placeId),
+    afterPublishExplore: () => invalidateAfterPublishExplore(queryClient),
     afterLogin: () => invalidateAfterLogin(queryClient),
     afterLogout: () => clearAuthQueryCache(queryClient),
   };

@@ -1,44 +1,61 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-  
 	"name": "side-quest",
-  
 	"main": ".open-next/worker.js",
-  
 	"compatibility_date": "2026-06-17",
-  
 	"compatibility_flags": [
-	  "nodejs_compat",
-	  "global_fetch_strictly_public"
+		"nodejs_compat",
+		"global_fetch_strictly_public"
 	],
 	"observability": {
 		"enabled": true,
-		"head_sampling_rate": 1 // optional. default = 1.
+		"head_sampling_rate": 1
 	},
 	"assets": {
-	  "directory": ".open-next/assets",
-	  "binding": "ASSETS"
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
 	},
-  
 	"services": [
-	  {
-		"binding": "WORKER_SELF_REFERENCE",
-		"service": "side-quest"
-	  }
+		{
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "side-quest"
+		}
 	],
-  
 	"r2_buckets": [
-	  {
-		"binding": "NEXT_INC_CACHE_R2_BUCKET",
-		"bucket_name": "random-sidequest-opennext-cache"
-	  },
-	  {
-		"binding": "ASSETS_BUCKET",
-		"bucket_name": "random-sidequest-assets"
-	  }
+		{
+			"binding": "NEXT_INC_CACHE_R2_BUCKET",
+			"bucket_name": "random-sidequest-opennext-cache"
+		},
+		{
+			"binding": "ASSETS_BUCKET",
+			"bucket_name": "random-sidequest-assets"
+		}
 	],
-  
+	// OpenNext on-demand revalidation (revalidateTag) — see scripts/setup-next-tag-cache-d1.sql
+	"d1_databases": [
+		{
+			"binding": "NEXT_TAG_CACHE_D1",
+			"database_name": "random-sidequest-next-tag-cache",
+			"database_id": "29442a9a-45cf-489a-9785-585af199efaa"
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "NEXT_CACHE_DO_QUEUE",
+				"class_name": "DOQueueHandler"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"DOQueueHandler"
+			]
+		}
+	],
 	"images": {
-	  "binding": "IMAGES"
+		"binding": "IMAGES"
 	}
-  }
+}

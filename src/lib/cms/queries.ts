@@ -55,6 +55,25 @@ export async function getCmsPageBySlug(slug: string): Promise<CmsPageRow | null>
   return (data as CmsPageRow | null) ?? null;
 }
 
+/** Lightweight key for explore page cache — changes when a new revision is published. */
+export async function getPublishedExploreCacheKey(): Promise<string> {
+  const page = await getCmsPageBySlug(EXPLORE_PAGE_SLUG);
+  if (!page) return "none";
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("cms_page_revisions")
+    .select("version_number, updated_at")
+    .eq("page_id", page.id)
+    .eq("status", "published")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return "none";
+
+  return `v${data.version_number}:${data.updated_at}`;
+}
+
 export async function getCmsRevision(
   pageId: string,
   status: RevisionStatus

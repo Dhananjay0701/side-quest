@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { parseApiJson } from "@/lib/api/response";
+import { useQueryInvalidation } from "@/lib/query/hooks";
 
 interface PublishPanelProps {
   onPublished: () => void;
 }
 
 export function PublishPanel({ onPublished }: PublishPanelProps) {
+  const { afterPublishExplore } = useQueryInvalidation();
   const [publishing, setPublishing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -24,8 +26,8 @@ export function PublishPanel({ onPublished }: PublishPanelProps) {
       const json = await parseApiJson<{ versionNumber: number }>(res);
       if (!res.ok) throw new Error(json.error?.message ?? "Publish failed");
       setMessage(`Published v${json.data?.versionNumber ?? ""}`);
+      afterPublishExplore();
       onPublished();
-      await fetch("/api/explore/page", { credentials: "same-origin", cache: "reload" });
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Publish failed");
     } finally {
