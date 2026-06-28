@@ -39,27 +39,35 @@ export function AppHeader() {
       </div>
     );
 
-  const createButton =
+  const createButton = (variant: "mobile" | "desktop") =>
     profile && !isPending ? (
       <CreateCollectionDialog
         trigger={
           <button
-            aria-label="New collection"
-            className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:border-border hover:text-foreground lg:px-3"
+            aria-label="Create new collection"
+            className={cn(
+              "flex shrink-0 items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 py-1.5 text-xs font-medium text-muted transition-colors hover:border-border hover:text-foreground",
+              variant === "mobile"
+                ? "px-3 whitespace-nowrap"
+                : "px-3"
+            )}
           >
-            <Plus className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">New collection</span>
+            <Plus className="h-3.5 w-3.5 shrink-0" />
+            {variant === "mobile" ? "New collection" : "New collection"}
           </button>
         }
       />
     ) : (
       <Link
         href="/login?next=/"
-        aria-label="New collection"
-        className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:border-border hover:text-foreground lg:px-3"
+        aria-label="Create new collection"
+        className={cn(
+          "flex shrink-0 items-center gap-0.5 rounded-lg border border-border/60 bg-card/60 py-0.5 text-xs font-medium text-muted transition-colors hover:border-border hover:text-foreground",
+          variant === "mobile" ? "px-3 whitespace-nowrap" : "px-3"
+        )}
       >
-        <Plus className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">New collection</span>
+        <Plus className="h-3.5 w-3.5 shrink-0" />
+        {variant === "mobile" ? "Create new collection" : "New collection"}
       </Link>
     );
 
@@ -80,7 +88,7 @@ export function AppHeader() {
             <span className="truncate text-sm font-semibold tracking-tight">Random Sidequest</span>
           </Link>
           <div className="flex shrink-0 items-center gap-2">
-            {createButton}
+            {createButton("mobile")}
             {authControls}
           </div>
         </div>
@@ -142,7 +150,7 @@ export function AppHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
-            {createButton}
+            {createButton("desktop")}
             {authControls}
           </div>
         </div>
